@@ -8,8 +8,8 @@
 union Dados
 {
 	float valorN;
-	char valorL[10]; //no trabalho ele colocou como valorL(1/0) - não sei oque quis dizer
-	char valorF[1];
+	char valorD[10];
+	char valorL; //fica entre 1/0
 	char valorC[50];
 	char valorM[50];
 };
@@ -18,7 +18,7 @@ union Dados
 struct Celula
 {
 	struct Celula *prox;
-	union Dados *dados; //não tenho total certeza que tem que usar * na declaração
+	union Dados dados; //não tenho total certeza que tem que usar * na declaração
 };
 typedef struct Celula celula;
 
@@ -27,7 +27,7 @@ struct Status
 {
 	//não sei se tem o tipo Boolean em C
 	int status; //1-True | 0-False
-	struct Status status;
+	struct Status *prox;
 };
 typedef struct Status status;
 

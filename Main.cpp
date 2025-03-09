@@ -43,18 +43,10 @@ struct Campo
 };
 typedef struct Campo campo;
 
-//struct que vai conter os campos das datas
-//struct Date
-//{
-//	int dia, mes, ano;
-//};
-//typedef struct Date date;
-
 //struct que contem os dados do arquivo
 struct Arquivo
 {
 	char nomeDBF[50];
-	//struct date data;
 	char data[11];
 	char hora[6];
 	struct status *status;
@@ -66,13 +58,38 @@ typedef struct Arquivo arquivo;
 //struct que vai ter a unidade de disco do arquivo
 struct Unidade
 {
-	char und[3];
+	char unid[3];
 	struct arquivo *arqs;
-	struct Unidade *top *bottom;
+	struct Unidade *top, *bottom;
 };
 typedef struct Unidade unidade;
 
-
+//Função que realiza a operação de SetDefaultTo (APENAS TESTE)
+void setDefaultTo(unidade **listaUnid, char unidade)
+{
+	if(strcmp(unidade,"C:") == 0 && strcmp(unidade,"D:") == 0)
+	{
+		//criando a nova caixinha de unidade
+		unidade *novaUnid = (unidade*)malloc(sizeof(unidade));
+		strcpy(novaUnid->unid,unidade);
+		novaUnid->arqs = NULL;
+		novaUnid->bottom = novaUnid->top = NULL;
+	
+		if(*listUnid == NULL) //se caso a lista de unidade ainda estiver vazia
+		{
+			*listUnid = novaUnid;
+		}
+		else //se caso já tiver um ou mais elemento na lista de unidade
+		{
+			novaUnid->top = *listUnid;
+			(*listUnid)->bottom = novaUnid;
+			*listUnid = novaUnid;
+		}
+	}
+	else
+		printf("\nNao existe essa unidade!\n");
+		
+}
 
 int main(void)
 {

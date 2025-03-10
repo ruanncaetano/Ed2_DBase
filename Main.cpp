@@ -101,12 +101,8 @@ void setDefaultTo(unidade **auxListUnid, unidade *listUnid, char unidade[3])
 
 //função que cria um novo arquivo dentro de algum disco
 void create(unidade **auxListUnid, char nomeDBF[50], char data[11], char hora[6])
-{ 
-
-// 	TEM ALGUM BO AQUI QUE SE EU INSERIR UM ARQUIVO E DEPOIS INSERIR OUTRO
-// 	ELE APENAS VAI SALVAR O ULTIMO ARQUIVO INSERIDO
- 	
-	arquivo *novoArq, *auxArq;
+{
+	arquivo *novoArq, *atualArq;
 	novoArq = (arquivo*)malloc(sizeof(arquivo));
 	
 	strcpy(novoArq->nomeDBF,nomeDBF);
@@ -123,29 +119,36 @@ void create(unidade **auxListUnid, char nomeDBF[50], char data[11], char hora[6]
 	}
 	else
 	{
-		auxArq = (*auxListUnid)->arqs;
-		while(auxArq->prox != NULL)
-			auxArq = auxArq->prox;
+		atualArq = (*auxListUnid)->arqs;
+		while(atualArq->prox != NULL)
+			atualArq = atualArq->prox;
 			
-		novoArq->ant = auxArq;
-		auxArq->prox = novoArq;
+		novoArq->ant = atualArq;
+		atualArq->prox = novoArq;
 	}
 	
 	printf("\nArquivo inserido com sucesso!!!\n");
 }
 
-void dir(unidade *auxListUnid) //OK
+//função que exibe os arquivos da unidade
+void dir(unidade *auxListUnid)
 {
-	unidade *aux = auxListUnid;
-	printf("\nUNIDADE ATUAL: %s",aux->unid);
-	while(aux->arqs != NULL)
+	arquivo *arqAux = auxListUnid->arqs;
+	printf("\nUNIDADE ATUAL: %s",auxListUnid->unid);
+	if(arqAux != NULL)
 	{
-		printf("\n*** EXIBINDO DADOS DOS ARQUIVOS ***");
-		printf("\nNome DBF: %s",aux->arqs->nomeDBF);
-		printf("\nData: %s",aux->arqs->data);
-		printf("\nHora: %s\n",aux->arqs->hora);
-		aux->arqs = aux->arqs->prox;
+		while(arqAux != NULL)
+		{
+			printf("\n*** EXIBINDO DADOS DOS ARQUIVOS ***");
+			printf("\nNome DBF: %s",arqAux->nomeDBF);
+			printf("\nData: %s",arqAux->data);
+			printf("\nHora: %s\n",arqAux->hora);
+			arqAux = arqAux->prox;
+		}
 	}
+	else
+		printf("\nUnidade sem nenhum arquivo!\n");
+	
 }
 
 int main(void)
@@ -157,7 +160,8 @@ int main(void)
 	unidade *auxListUnid; //ponteiro para manipular o disco C: e D:
 	criarUnidade(&listUnid); //cria as duas unidades padrão - C: e D:
 	
-	arquivo *listArq = NULL;
+	//esse ponteiro vamos usar apenas para manipular o arquivo que o usuario deseja
+	arquivo *aberto = NULL; //vamos utilizar ele na função USE
 	
 	do
 	{
@@ -200,7 +204,7 @@ int main(void)
 		}
 		else
 		if(strcmp(comandoDbase,"DIR") == 0)
-		{ //apenas para testar se está salvando o arquivo
+		{
 			dir(auxListUnid);
 		}
 		else

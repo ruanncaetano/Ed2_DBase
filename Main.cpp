@@ -38,7 +38,7 @@ struct Campo
 	char type;
 	int width;
 	int dec;
-	struct celula *pAtual, *pDados;
+	struct Celula *pAtual, *pDados;
 	struct Campo *prox;
 };
 typedef struct Campo campo;
@@ -49,8 +49,8 @@ struct Arquivo
 	char nomeDBF[50];
 	char data[11];
 	char hora[6];
-	struct status *status;
-	struct campo *campos;
+	struct Status *status;
+	struct Campo *campos;
 	struct Arquivo *prox, *ant;
 };
 typedef struct Arquivo arquivo;
@@ -59,40 +59,79 @@ typedef struct Arquivo arquivo;
 struct Unidade
 {
 	char unid[3];
-	struct arquivo *arqs;
+	struct Arquivo *arqs;
 	struct Unidade *top, *bottom;
 };
 typedef struct Unidade unidade;
 
-//Função que realiza a operação de SetDefaultTo (APENAS TESTE)
-void setDefaultTo(unidade **listaUnid, char unidade)
+//função que cria as duas unidades de disco automatico
+void criarUnidade(unidade **listUnid)
 {
-	if(strcmp(unidade,"C:") == 0 && strcmp(unidade,"D:") == 0)
-	{
-		//criando a nova caixinha de unidade
-		unidade *novaUnid = (unidade*)malloc(sizeof(unidade));
-		strcpy(novaUnid->unid,unidade);
-		novaUnid->arqs = NULL;
-		novaUnid->bottom = novaUnid->top = NULL;
+	//criando a unidade C:
+	unidade *novaUnid1 = (unidade*)malloc(sizeof(unidade));
+	strcpy(novaUnid1->unid,"C:");
+	novaUnid1->arqs = NULL;
+	novaUnid1->bottom = NULL;
 	
-		if(*listUnid == NULL) //se caso a lista de unidade ainda estiver vazia
-		{
-			*listUnid = novaUnid;
-		}
-		else //se caso já tiver um ou mais elemento na lista de unidade
-		{
-			novaUnid->top = *listUnid;
-			(*listUnid)->bottom = novaUnid;
-			*listUnid = novaUnid;
-		}
+	//criando a unidade D:
+	unidade *novaUnid2 = (unidade*)malloc(sizeof(unidade));
+	strcpy(novaUnid2->unid,"D:");
+	novaUnid2->arqs = NULL;
+	novaUnid2->top = NULL;
+	
+	//fazendo as ligações entre as unidades e o cabeça da lista
+	*listUnid = novaUnid1;
+	novaUnid1->top = novaUnid2;
+	novaUnid2->bottom = novaUnid1;
+}
+
+//Função que realiza a operação de SetDefaultTo (APENAS TESTE)
+void setDefaultTo(unidade **auxListUnid, unidade *listUnid, char unidade[3])
+{
+	if(strcmp(unidade,"C:") == 0) //se caso a unidade for a C:
+	{
+		*auxListUnid = listUnid;
+		printf("\nUnidade mudada para: %s",(*auxListUnid)->unid);
 	}
 	else
-		printf("\nNao existe essa unidade!\n");
-		
+	{
+		*auxListUnid = listUnid->top; //apontando para unidade D:
+		printf("\nUnidade mudada para: %s",(*auxListUnid)->unid);
+	}
 }
 
 int main(void)
 {
-	gotoxy(10,20);
-	printf("\nTeste!!!");
+	char comandoDbase[20], unid[3];
+	
+	unidade *listUnid = NULL;
+	unidade *auxListUnid; //ponteiro para manipular o disco C: e D:
+	criarUnidade(&listUnid); //cria as duas unidades padrão - C: e D:
+	
+	do
+	{
+		printf("\nDigite o comando do DBase: ");
+		fflush(stdin);
+		gets(comandoDbase);
+		
+		if(strcmp(comandoDbase,"SET DEFAULT TO") == 0)
+		{//apenas para definir a uidade de disco que vai salvar o arquivo
+			printf("\nDigite a unidade de disco: ");
+			fflush(stdin);
+			gets(unid);
+				
+			if(strcmp(unid,"C:") == 0 || strcmp(unid,"D:") == 0)
+			{
+				setDefaultTo(&auxListUnid,listUnid,unid);
+			}
+			else
+				printf("\nNao existe essa unidade!\n");
+		}
+		else
+		if(strcmp(comandoDbase,"QUIT") == 0)
+		{
+			printf("\nAmbiente DBase encerrado!\n");
+		}
+		getch();	
+	}while(strcmp(comandoDbase,"QUIT") != 0);
 }

@@ -91,22 +91,73 @@ void setDefaultTo(unidade **auxListUnid, unidade *listUnid, char unidade[3])
 	if(strcmp(unidade,"C:") == 0) //se caso a unidade for a C:
 	{
 		*auxListUnid = listUnid;
-		printf("\nUnidade mudada para: %s",(*auxListUnid)->unid);
 	}
 	else
 	{
 		*auxListUnid = listUnid->top; //apontando para unidade D:
-		printf("\nUnidade mudada para: %s",(*auxListUnid)->unid);
+	}
+	printf("\nUnidade mudada para: %s",(*auxListUnid)->unid);
+}
+
+//função que cria um novo arquivo dentro de algum disco
+void create(unidade **auxListUnid, char nomeDBF[50], char data[11], char hora[6])
+{ 
+
+// 	TEM ALGUM BO AQUI QUE SE EU INSERIR UM ARQUIVO E DEPOIS INSERIR OUTRO
+// 	ELE APENAS VAI SALVAR O ULTIMO ARQUIVO INSERIDO
+ 	
+	arquivo *novoArq, *auxArq;
+	novoArq = (arquivo*)malloc(sizeof(arquivo));
+	
+	strcpy(novoArq->nomeDBF,nomeDBF);
+	strcpy(novoArq->data,data);
+	strcpy(novoArq->hora,hora);
+	novoArq->status = NULL;
+	novoArq->campos = NULL;
+	novoArq->prox = NULL;
+	
+	if((*auxListUnid)->arqs == NULL) //se caso ainda não tiver nenhum arquivo
+	{
+		(*auxListUnid)->arqs = novoArq;
+		novoArq->ant = NULL;
+	}
+	else
+	{
+		auxArq = (*auxListUnid)->arqs;
+		while(auxArq->prox != NULL)
+			auxArq = auxArq->prox;
+			
+		novoArq->ant = auxArq;
+		auxArq->prox = novoArq;
+	}
+	
+	printf("\nArquivo inserido com sucesso!!!\n");
+}
+
+void dir(unidade *auxListUnid) //OK
+{
+	unidade *aux = auxListUnid;
+	printf("\nUNIDADE ATUAL: %s",aux->unid);
+	while(aux->arqs != NULL)
+	{
+		printf("\n*** EXIBINDO DADOS DOS ARQUIVOS ***");
+		printf("\nNome DBF: %s",aux->arqs->nomeDBF);
+		printf("\nData: %s",aux->arqs->data);
+		printf("\nHora: %s\n",aux->arqs->hora);
+		aux->arqs = aux->arqs->prox;
 	}
 }
 
 int main(void)
 {
 	char comandoDbase[20], unid[3];
+	char nomeDBF[50], data[11], hora[6];
 	
 	unidade *listUnid = NULL;
 	unidade *auxListUnid; //ponteiro para manipular o disco C: e D:
 	criarUnidade(&listUnid); //cria as duas unidades padrão - C: e D:
+	
+	arquivo *listArq = NULL;
 	
 	do
 	{
@@ -128,10 +179,32 @@ int main(void)
 				printf("\nNao existe essa unidade!\n");
 		}
 		else
+		if(strcmp(comandoDbase,"CREATE") == 0)
+		{
+			printf("\nNome do arquivo .DBF: ");
+			fflush(stdin);
+			gets(nomeDBF);
+			printf("\nData do arquivo .DBF (dd/MM/yyyy): ");
+			fflush(stdin);
+			gets(data);
+			printf("\nHora do arquovo .DBF (hh:mm): ");
+			fflush(stdin);
+			gets(hora);
+			
+			create(&auxListUnid,nomeDBF,data,hora);
+		}
+		else
 		if(strcmp(comandoDbase,"QUIT") == 0)
 		{
 			printf("\nAmbiente DBase encerrado!\n");
 		}
+		else
+		if(strcmp(comandoDbase,"DIR") == 0)
+		{ //apenas para testar se está salvando o arquivo
+			dir(auxListUnid);
+		}
+		else
+			printf("\nNao existe esse comando!\n");
 		getch();	
 	}while(strcmp(comandoDbase,"QUIT") != 0);
 }

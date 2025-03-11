@@ -163,6 +163,7 @@ void use(arquivo **aberto, unidade *auxListUnid, char nomeDBF[50]) //OK
 	if(auxArq != NULL) //achou
 	{
 		*aberto = auxArq;
+		printf("\nArquivo %s aberto com sucesso!",(*aberto)->nomeDBF);
 //		para testar se está sendo feito o apontamento correto
 //		printf("\n### ARQUIVO QUE O PONTEIRO ABERTO ESTA APONTANDO ###");
 //		printf("\nNome DBF: %s",(*aberto)->nomeDBF);
@@ -175,41 +176,121 @@ void use(arquivo **aberto, unidade *auxListUnid, char nomeDBF[50]) //OK
 }
 
 //função que vai montar a estrutura com os campos presente no arquivo
-void listStructure(arquivo *aberto)
+//void listStructure(arquivo *aberto)
+//{
+//	//criando a caixa "CODIGO"
+//	campo *auxCod = (campo*)malloc(sizeof(campo));
+//	strcpy(auxCod->fieldName,"CODIGO");
+//	auxCod->type = 'N';
+//	auxCod->width = 8;
+//	auxCod->dec = 0;
+//	auxCod->pAtual = auxCod->pDados = NULL;
+//	
+//	//criando a caixa "NOME"
+//	campo *auxNome = (campo*)malloc(sizeof(campo));
+//	strcpy(auxNome->fieldName,"NOME");
+//	auxNome->type = 'C';
+//	auxNome->width = 20;
+//	auxNome->dec = 0;
+//	auxNome->pAtual = auxNome->pDados = NULL;
+//	
+//	//criando a caixa "FONE"
+//	campo *auxFone = (campo*)malloc(sizeof(campo));
+//	strcpy(auxFone->fieldName,"FONE");
+//	auxFone->type = 'C';
+//	auxFone->width = 10;
+//	auxFone->dec = 0;
+//	auxFone->pAtual = auxFone->pDados = NULL;
+//	
+//	
+//	//aqui no final é ligar uma caixa na outra
+//	auxCod->prox = auxNome;
+//	auxNome->prox = auxFone;
+//	auxFone->prox = NULL;
+//	
+//	aberto->campos = auxCod;
+//}
+
+void exibeStructure(arquivo *aberto, unidade *auxListUnid, int field, int total)
 {
-	//criando a caixa "CODIGO"
-	campo *auxCod = (campo*)malloc(sizeof(campo));
-	strcpy(auxCod->fieldName,"CODIGO");
-	auxCod->type = 'N';
-	auxCod->width = 8;
-	auxCod->dec = 0;
-	auxCod->pAtual = auxCod->pDados = NULL;
+	int cont = 1;
+	arquivo *auxArq = aberto;
+	campo *auxCampo = aberto->campos;
+	printf("\n. LIST STRUCTURE");
+	printf("\nStructure for database\t: %s%s",auxListUnid->unid,auxArq->nomeDBF);
+	printf("\nNumber of data records\t: 0");
+	printf("\nDate of last update   \t: %s",auxArq->data);
 	
-	//criando a caixa "NOME"
-	campo *auxNome = (campo*)malloc(sizeof(campo));
-	strcpy(auxNome->fieldName,"NOME");
-	auxNome->type = 'C';
-	auxNome->width = 20;
-	auxNome->dec = 0;
-	auxNome->pAtual = auxNome->pDados = NULL;
+	while(cont != field)
+	{
+		printf("\nField: %d",cont);
+		printf("\nField name: %s",auxCampo->fieldName);
+		
+		//aqui eu acho que tem que colocar o restante dos tipos de dados da tabela
+		if(auxCampo->type == 'C' || auxCampo->type == 'c')
+			printf("\nType: Character");
+		else
+		if(auxCampo->type == 'N' || auxCampo->type == 'n')
+			printf("\nType: Numeric");
+		
+		printf("\nWidth: %d",auxCampo->width);
+		printf("\nDec: %d\n",auxCampo->dec);
+		
+		auxCampo = auxCampo->prox;
+		cont++;
+	}
 	
-	//criando a caixa "FONE"
-	campo *auxFone = (campo*)malloc(sizeof(campo));
-	strcpy(auxFone->fieldName,"FONE");
-	auxFone->type = 'C';
-	auxFone->width = 10;
-	auxFone->dec = 0;
-	auxFone->pAtual = auxFone->pDados = NULL;
-	
-	
-	//aqui no final é ligar uma caixa na outra
-	auxCod->prox = auxNome;
-	auxNome->prox = auxFone;
-	auxFone->prox = NULL;
-	
-	aberto->campos = auxCod;
+	printf("\n** Total **: %d",total);
 }
 
+void listStructure(arquivo *aberto, unidade *auxListUnid)
+{
+	//para manipular a struct campo
+	char fieldName[50], type, op;
+	int width, field=1, total = 1;
+	
+	printf("\n[ESC] - Sair");
+	op = getch();
+	while(op != 27)
+	{
+		//pegandos os dados que o usuario digitou
+		printf("\nFieldName: ");
+		fflush(stdin);
+		gets(fieldName);
+		printf("\nType: ");
+		scanf("%c",&type);
+		printf("\nWidth: ");
+		scanf("%d",&width);
+		
+		total = total + width;
+		
+		//colocando os dados em seus devidos campos na caixinha
+		campo *novoCampo = (campo*)malloc(sizeof(campo));
+		strcpy(novoCampo->fieldName,fieldName);
+		novoCampo->type = type;
+		novoCampo->width = width;
+		novoCampo->dec = 0;
+		novoCampo->pAtual = novoCampo->pDados = NULL;
+		novoCampo->prox = NULL;
+		
+		if(aberto->campos == NULL)
+			aberto->campos = novoCampo;
+		else
+		{
+			campo *auxCampo = aberto->campos;
+			while(auxCampo->prox != NULL)
+				auxCampo = auxCampo->prox;
+				
+			auxCampo->prox = novoCampo;
+		}
+		
+		field++;
+		printf("\n[ESC] - Sair");
+		op = getch();
+	}
+	
+	exibeStructure(aberto,auxListUnid,field,total);
+}
 
 int main(void)
 {
@@ -217,11 +298,11 @@ int main(void)
 	char nomeDBF[50], data[11], hora[6];
 	
 	unidade *listUnid = NULL;
-	unidade *auxListUnid; //ponteiro para manipular o disco C: e D:
+	unidade *auxListUnid = NULL; //ponteiro para manipular o disco C: e D:
 	criarUnidade(&listUnid); //cria as duas unidades padrão - C: e D:
 	
 	//esse ponteiro vamos usar apenas para manipular o arquivo que o usuario deseja
-	arquivo *aberto = NULL; //vamos utilizar ele na função USE
+	arquivo *aberto = NULL;
 	
 	do
 	{
@@ -238,6 +319,9 @@ int main(void)
 			if(strcmp(unid,"C:") == 0 || strcmp(unid,"D:") == 0)
 			{
 				setDefaultTo(&auxListUnid,listUnid,unid);
+				aberto = NULL;
+//				coloquei o aberto para NULL aqui porque toda vez a pessoa mudar o disco
+//				ela tem que ser obrigada a dizer qual arquivo ela quer abrir
 			}
 			else
 				printf("\nNao existe essa unidade!\n");
@@ -245,17 +329,23 @@ int main(void)
 		else
 		if(strcmp(comandoDbase,"CREATE") == 0)
 		{
-			printf("\nNome do arquivo .DBF: ");
-			fflush(stdin);
-			gets(nomeDBF);
-			printf("\nData do arquivo .DBF (dd/MM/yyyy): ");
-			fflush(stdin);
-			gets(data);
-			printf("\nHora do arquovo .DBF (hh:mm): ");
-			fflush(stdin);
-			gets(hora);
+			if(auxListUnid != NULL)
+			{
+				printf("\nNome do arquivo .DBF: ");
+				fflush(stdin);
+				gets(nomeDBF);
+				printf("\nData do arquivo .DBF (dd/MM/yyyy): ");
+				fflush(stdin);
+				gets(data);
+				printf("\nHora do arquivo .DBF (hh:mm): ");
+				fflush(stdin);
+				gets(hora);
+				
+				create(&auxListUnid,nomeDBF,data,hora);
+			}
+			else
+				printf("\nVoce ainda nao definiu a unidade!\n");
 			
-			create(&auxListUnid,nomeDBF,data,hora);
 		}
 		else
 		if(strcmp(comandoDbase,"QUIT") == 0)
@@ -265,28 +355,37 @@ int main(void)
 		else
 		if(strcmp(comandoDbase,"DIR") == 0)
 		{
-			dir(auxListUnid);
+			if(auxListUnid != NULL)
+				dir(auxListUnid);
+			else
+				printf("\nVoce ainda nao definiu a unidade!\n");
 		}
 		else
 		if(strcmp(comandoDbase,"USE") == 0)
 		{
-			if(auxListUnid->arqs != NULL) //contem arquivos dentro da unidade
+			if(auxListUnid != NULL)
 			{
-				printf("\nNome arquivo: ");
-				fflush(stdin);
-				gets(nomeDBF);
-				
-				use(&aberto,auxListUnid,nomeDBF);
+				if(auxListUnid->arqs != NULL) //contem arquivos dentro da unidade
+				{
+					printf("\nNome arquivo: ");
+					fflush(stdin);
+					gets(nomeDBF);
+					
+					use(&aberto,auxListUnid,nomeDBF);
+				}
+				else //não contem arquivos dentro da unidade
+					printf("\nNao contem arquivos dentro da unidade!\n");
 			}
-			else //não contem arquivos dentro da unidade
-				printf("\nNao contem arquivos dentro da unidade!\n");
+			else
+				printf("\nVoce ainda nao definiu a unidade!\n");
+			
 		}
 		else
 		if(strcmp(comandoDbase,"LIST STRUCTURE") == 0)
 		{
 			if(aberto != NULL) //contem um arquivo
 			{
-				listStructure(aberto);
+				listStructure(aberto,auxListUnid);
 			}
 			else
 				printf("\nNao contem arquivos dentro da unidade!\n");

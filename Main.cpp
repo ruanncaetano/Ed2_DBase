@@ -65,7 +65,7 @@ struct Unidade
 typedef struct Unidade unidade;
 
 //função que cria as duas unidades de disco automatico
-void criarUnidade(unidade **listUnid)
+void criarUnidade(unidade **listUnid) //OK
 {
 	//criando a unidade C:
 	unidade *novaUnid1 = (unidade*)malloc(sizeof(unidade));
@@ -86,7 +86,7 @@ void criarUnidade(unidade **listUnid)
 }
 
 //Função que realiza a operação de SetDefaultTo (APENAS TESTE)
-void setDefaultTo(unidade **auxListUnid, unidade *listUnid, char unidade[3])
+void setDefaultTo(unidade **auxListUnid, unidade *listUnid, char unidade[3]) //OK
 {
 	if(strcmp(unidade,"C:") == 0) //se caso a unidade for a C:
 	{
@@ -96,11 +96,11 @@ void setDefaultTo(unidade **auxListUnid, unidade *listUnid, char unidade[3])
 	{
 		*auxListUnid = listUnid->top; //apontando para unidade D:
 	}
-	printf("\nUnidade mudada para: %s",(*auxListUnid)->unid);
+	printf("Unidade mudada para: %s\n",(*auxListUnid)->unid);
 }
 
 //função que cria um novo arquivo dentro de algum disco
-void create(unidade **auxListUnid, char nomeDBF[50], char data[11], char hora[6])
+void create(unidade **auxListUnid, char nomeDBF[50], char data[11], char hora[6]) //OK
 {
 	arquivo *novoArq, *atualArq;
 	novoArq = (arquivo*)malloc(sizeof(arquivo));
@@ -131,7 +131,7 @@ void create(unidade **auxListUnid, char nomeDBF[50], char data[11], char hora[6]
 }
 
 //função que exibe os arquivos da unidade
-void dir(unidade *auxListUnid)
+void dir(unidade *auxListUnid) //OK
 {
 	arquivo *arqAux = auxListUnid->arqs;
 	printf("\nUNIDADE ATUAL: %s",auxListUnid->unid);
@@ -150,6 +150,66 @@ void dir(unidade *auxListUnid)
 		printf("\nUnidade sem nenhum arquivo!\n");
 	
 }
+
+//função que busca o arquivo e faz o ponteiro aberto apontar para ele
+void use(arquivo **aberto, unidade *auxListUnid, char nomeDBF[50]) //OK
+{
+
+	arquivo *auxArq = auxListUnid->arqs;
+	
+	while(auxArq != NULL && strcmp(auxArq->nomeDBF,nomeDBF) != 0)
+		auxArq = auxArq->prox;
+			
+	if(auxArq != NULL) //achou
+	{
+		*aberto = auxArq;
+//		para testar se está sendo feito o apontamento correto
+//		printf("\n### ARQUIVO QUE O PONTEIRO ABERTO ESTA APONTANDO ###");
+//		printf("\nNome DBF: %s",(*aberto)->nomeDBF);
+//		printf("\nData: %s",(*aberto)->data);
+//		printf("\nHora: %s",(*aberto)->hora);
+	}	
+	else //não achou o arquivo
+		printf("\nArquivo nao encontrado!\n");
+	
+}
+
+//função que vai montar a estrutura com os campos presente no arquivo
+void listStructure(arquivo *aberto)
+{
+	//criando a caixa "CODIGO"
+	campo *auxCod = (campo*)malloc(sizeof(campo));
+	strcpy(auxCod->fieldName,"CODIGO");
+	auxCod->type = 'N';
+	auxCod->width = 8;
+	auxCod->dec = 0;
+	auxCod->pAtual = auxCod->pDados = NULL;
+	
+	//criando a caixa "NOME"
+	campo *auxNome = (campo*)malloc(sizeof(campo));
+	strcpy(auxNome->fieldName,"NOME");
+	auxNome->type = 'C';
+	auxNome->width = 20;
+	auxNome->dec = 0;
+	auxNome->pAtual = auxNome->pDados = NULL;
+	
+	//criando a caixa "FONE"
+	campo *auxFone = (campo*)malloc(sizeof(campo));
+	strcpy(auxFone->fieldName,"FONE");
+	auxFone->type = 'C';
+	auxFone->width = 10;
+	auxFone->dec = 0;
+	auxFone->pAtual = auxFone->pDados = NULL;
+	
+	
+	//aqui no final é ligar uma caixa na outra
+	auxCod->prox = auxNome;
+	auxNome->prox = auxFone;
+	auxFone->prox = NULL;
+	
+	aberto->campos = auxCod;
+}
+
 
 int main(void)
 {
@@ -206,6 +266,30 @@ int main(void)
 		if(strcmp(comandoDbase,"DIR") == 0)
 		{
 			dir(auxListUnid);
+		}
+		else
+		if(strcmp(comandoDbase,"USE") == 0)
+		{
+			if(auxListUnid->arqs != NULL) //contem arquivos dentro da unidade
+			{
+				printf("\nNome arquivo: ");
+				fflush(stdin);
+				gets(nomeDBF);
+				
+				use(&aberto,auxListUnid,nomeDBF);
+			}
+			else //não contem arquivos dentro da unidade
+				printf("\nNao contem arquivos dentro da unidade!\n");
+		}
+		else
+		if(strcmp(comandoDbase,"LIST STRUCTURE") == 0)
+		{
+			if(aberto != NULL) //contem um arquivo
+			{
+				listStructure(aberto);
+			}
+			else
+				printf("\nNao contem arquivos dentro da unidade!\n");
 		}
 		else
 			printf("\nNao existe esse comando!\n");

@@ -2,6 +2,54 @@
 #include<string.h>
 #include<conio2.h>
 
+//função para ser adicionada no trabalho
+void tratandoComandos(char comandoDbase[50], char *comando, char *nome)
+{
+	int i=0, j=0;
+	
+//	tratando o comando "SET DEFAULT TO" para separar as coisas
+	if(strcmp(comandoDbase,"SET DEFAULT TO C:") == 0 || strcmp(comandoDbase,"SET DEFAULT TO D:") == 0)
+	{
+		// Copiando "SET DEFAULT TO" para comando
+	    for(i = 0; i < 15; i++)
+	        comando[i] = comandoDbase[i];
+	    comando[i] = '\0'; // Adiciona terminador nulo
+	
+	    // Copiando "C:" para nome
+	    while(comandoDbase[i] != '\0')
+	    {
+	    	nome[j] = comandoDbase[i];
+	    	j++;
+	    	i++;
+		}
+	        
+	    nome[j] = '\0'; // Adiciona terminador nulo
+	}
+	else //comandos com apenas uma palavra
+	{
+		while(comandoDbase[i] != ' ')
+		{
+			comando[i] = comandoDbase[i];
+			i++;
+		}
+		comando[i] = ' '; //adiciona espaço ao final do comando
+	    i++;
+	    comando[i] = '\0'; //adiciona \0 para indicar o fim da string
+	    
+//	    retirando os espaços a mais 
+	    while(comandoDbase[i] == ' ') //ignora espaços após o comando
+        	i++;
+        
+        while(comandoDbase[i] != '\0') 
+	    {
+	        nome[j] = comandoDbase[i];
+	        j++;
+	        i++;
+	    }
+	    nome[j] = '\0'; //adiciona \0 para indicar o fim da string
+	}
+}
+
 void tratandoStringGeral(char comandoDbase[50], char *comando, char *nome)
 {
     int i=0, j=0, pos;

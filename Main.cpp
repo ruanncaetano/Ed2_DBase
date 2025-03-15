@@ -64,6 +64,7 @@ struct Unidade
 };
 typedef struct Unidade unidade;
 
+
 //função que cria as duas unidades de disco automatico
 void criarUnidade(unidade **listUnid) //OK
 {
@@ -86,9 +87,9 @@ void criarUnidade(unidade **listUnid) //OK
 }
 
 //Função que realiza a operação de SetDefaultTo (APENAS TESTE)
-void setDefaultTo(unidade **auxListUnid, unidade *listUnid, char unidade[3]) //OK
+void setDefaultTo(unidade **auxListUnid, unidade *listUnid, char unid[50]) //OK
 {
-	if(strcmp(unidade,"C:") == 0) //se caso a unidade for a C:
+	if(strcmp(unid,"SET DEFAULT TO C:") == 0) //se caso a unidade for a C:
 	{
 		*auxListUnid = listUnid;
 	}
@@ -97,6 +98,29 @@ void setDefaultTo(unidade **auxListUnid, unidade *listUnid, char unidade[3]) //O
 		*auxListUnid = listUnid->top; //apontando para unidade D:
 	}
 	printf("Unidade mudada para: %s\n",(*auxListUnid)->unid);
+}
+
+int validaType(campo *novoCampo, char type[20])
+{
+	int flag = 1;
+	if(stricmp(type,"character") == 0)
+		novoCampo->type = 'C';
+	else
+	if(stricmp(type,"numeric") == 0)
+		novoCampo->type = 'N';
+	else
+	if(stricmp(type,"date") == 0)
+		novoCampo->type = 'D';
+	else
+	if(stricmp(type,"logical") == 0)
+		novoCampo->type = 'L';
+	else
+	if(stricmp(type,"memo") == 0)
+		novoCampo->type = 'M';
+	else
+		flag = 0;
+		
+	return flag;
 }
 
 //função que cria um novo arquivo dentro de algum disco
@@ -125,6 +149,57 @@ void create(unidade **auxListUnid, char nomeDBF[50], char data[11], char hora[6]
 			
 		novoArq->ant = atualArq;
 		atualArq->prox = novoArq;
+	}
+	
+//	PARA CRIAR OS CAMPOS DE DENTRO DO ARQUIVO CRIADO PELO USUARIO (AINDA FALTA ARRUMAR)
+//	para manipular a struct campo
+	char fieldName[50], type[20], op;
+	int width, flag;
+	
+	printf("\n[ESC] - Sair");
+	op = getch();
+	while(op != 27)
+	{
+		campo *novoCampo = (campo*)malloc(sizeof(campo));
+		//pegandos os dados que o usuario digitou
+		printf("\nFieldName: ");
+		fflush(stdin);
+		gets(fieldName);
+		
+		printf("\nType: ");
+		fflush(stdin);
+		gets(type);
+		flag = validaType(novoCampo,type);
+		while(flag == 0) //obriga ele a digitar um tipe correto
+		{
+			printf("\nType invalido! Digite novamente...\n");
+			printf("\nType: ");
+			fflush(stdin);
+			gets(type);
+			flag = validaType(novoCampo,type);
+		}	
+		printf("\nWidth: ");
+		scanf("%d",&width);
+		
+//		na função valida type eu já coloco o type dentro da caixinha
+		strcpy(novoCampo->fieldName,fieldName);
+		novoCampo->width = width;
+		novoCampo->dec = 0;
+		novoCampo->pAtual = novoCampo->pDados = NULL;
+		novoCampo->prox = NULL;
+			
+		if(novoArq->campos == NULL)
+			novoArq->campos = novoCampo;
+		else
+		{
+			campo *auxCampo = novoArq->campos;
+			while(auxCampo->prox != NULL)
+				auxCampo = auxCampo->prox;
+				
+			auxCampo->prox = novoCampo;
+		}
+		printf("\n[ESC] - Sair");
+		op = getch();
 	}
 	
 	printf("\nArquivo inserido com sucesso!!!\n");
@@ -211,9 +286,9 @@ void use(arquivo **aberto, unidade *auxListUnid, char nomeDBF[50]) //OK
 //	aberto->campos = auxCod;
 //}
 
-void exibeStructure(arquivo *aberto, unidade *auxListUnid, int field, int total)
+void listStructure(arquivo *aberto, unidade *auxListUnid)
 {
-	int cont = 1;
+	int cont=1, total=1;
 	arquivo *auxArq = aberto;
 	campo *auxCampo = aberto->campos;
 	printf("\n. LIST STRUCTURE");
@@ -221,80 +296,46 @@ void exibeStructure(arquivo *aberto, unidade *auxListUnid, int field, int total)
 	printf("\nNumber of data records\t: 0");
 	printf("\nDate of last update   \t: %s",auxArq->data);
 	
-	while(cont != field)
+	if(auxCampo != NULL)
 	{
-		printf("\nField: %d",cont);
-		printf("\nField name: %s",auxCampo->fieldName);
-		
-		//aqui eu acho que tem que colocar o restante dos tipos de dados da tabela
-		if(auxCampo->type == 'C' || auxCampo->type == 'c')
-			printf("\nType: Character");
-		else
-		if(auxCampo->type == 'N' || auxCampo->type == 'n')
-			printf("\nType: Numeric");
-		
-		printf("\nWidth: %d",auxCampo->width);
-		printf("\nDec: %d\n",auxCampo->dec);
-		
-		auxCampo = auxCampo->prox;
-		cont++;
-	}
-	
-	printf("\n** Total **: %d",total);
-}
-
-void listStructure(arquivo *aberto, unidade *auxListUnid)
-{
-	//para manipular a struct campo
-	char fieldName[50], type, op;
-	int width, field=1, total = 1;
-	
-	printf("\n[ESC] - Sair");
-	op = getch();
-	while(op != 27)
-	{
-		//pegandos os dados que o usuario digitou
-		printf("\nFieldName: ");
-		fflush(stdin);
-		gets(fieldName);
-		printf("\nType: ");
-		scanf("%c",&type);
-		printf("\nWidth: ");
-		scanf("%d",&width);
-		
-		total = total + width;
-		
-		//colocando os dados em seus devidos campos na caixinha
-		campo *novoCampo = (campo*)malloc(sizeof(campo));
-		strcpy(novoCampo->fieldName,fieldName);
-		novoCampo->type = type;
-		novoCampo->width = width;
-		novoCampo->dec = 0;
-		novoCampo->pAtual = novoCampo->pDados = NULL;
-		novoCampo->prox = NULL;
-		
-		if(aberto->campos == NULL)
-			aberto->campos = novoCampo;
-		else
+		while(auxCampo != NULL)
 		{
-			campo *auxCampo = aberto->campos;
-			while(auxCampo->prox != NULL)
-				auxCampo = auxCampo->prox;
-				
-			auxCampo->prox = novoCampo;
+			printf("\nField: %d",cont);
+			printf("\nField name: %s",auxCampo->fieldName);
+			
+			if(auxCampo->type == 'C')
+				printf("\nType: Character");
+			else
+			if(auxCampo->type == 'N')
+				printf("\nType: Numeric");
+			else
+			if(auxCampo->type == 'D')
+				printf("\nType: Date");
+			else
+			if(auxCampo->type == 'L')
+				printf("\nType: Logical");
+			else
+			if(auxCampo->type == 'M')
+				printf("\nType: Memo");
+			
+			printf("\nWidth: %d",auxCampo->width);
+			printf("\nDec: %d\n",auxCampo->dec);
+			
+			total = total + auxCampo->width;
+			
+			auxCampo = auxCampo->prox;
+			cont++;
 		}
-		
-		field++;
-		printf("\n[ESC] - Sair");
-		op = getch();
+		printf("\n** Total **: %d",total);
 	}
-	
-	exibeStructure(aberto,auxListUnid,field,total);
+	else
+		printf("\nNao contem campos no arquivo!\n");
+		
 }
 
 int main(void)
 {
-	char comandoDbase[20], unid[3];
+	char comandoDbase[50], unid[3];
 	char nomeDBF[50], data[11], hora[6];
 	
 	unidade *listUnid = NULL;
@@ -310,42 +351,42 @@ int main(void)
 		fflush(stdin);
 		gets(comandoDbase);
 		
-		if(strcmp(comandoDbase,"SET DEFAULT TO") == 0)
-		{//apenas para definir a uidade de disco que vai salvar o arquivo
-			printf("\nDigite a unidade de disco: ");
-			fflush(stdin);
-			gets(unid);
-				
-			if(strcmp(unid,"C:") == 0 || strcmp(unid,"D:") == 0)
-			{
-				setDefaultTo(&auxListUnid,listUnid,unid);
-				aberto = NULL;
-//				coloquei o aberto para NULL aqui porque toda vez a pessoa mudar o disco
-//				ela tem que ser obrigada a dizer qual arquivo ela quer abrir
-			}
-			else
-				printf("\nNao existe essa unidade!\n");
+//		não sei se pode utilizar esse comando, mandei mensagem para o professor perguntando
+		if(strncmp(comandoDbase, "SET DEFAULT TO ", 15) == 0 || strncmp(comandoDbase, "SET DEFAULT TO", 14) == 0)
+		{
+		    if(strcmp(comandoDbase, "SET DEFAULT TO C:") == 0 || strcmp(comandoDbase, "SET DEFAULT TO D:") == 0)
+		    {
+		        setDefaultTo(&auxListUnid, listUnid, comandoDbase);
+		        aberto = NULL;
+//		        coloquei o aberto para NULL aqui porque toda vez que a pessoa mudar o disco
+//		        ela tem que ser obrigada a dizer qual arquivo ela quer abrir
+		    }
+		    else
+		        printf("\nNao existe essa unidade!\n");
 		}
 		else
-		if(strcmp(comandoDbase,"CREATE") == 0)
+		if(strncmp(comandoDbase,"CREATE ",7) == 0 || strncmp(comandoDbase,"CREATE",6) == 0) //comparando apenas o "CREATE "
 		{
 			if(auxListUnid != NULL)
 			{
-				printf("\nNome do arquivo .DBF: ");
-				fflush(stdin);
-				gets(nomeDBF);
-				printf("\nData do arquivo .DBF (dd/MM/yyyy): ");
-				fflush(stdin);
-				gets(data);
-				printf("\nHora do arquivo .DBF (hh:mm): ");
-				fflush(stdin);
-				gets(hora);
-				
-				create(&auxListUnid,nomeDBF,data,hora);
+				strcpy(nomeDBF,comandoDbase+7); //copiando tudo depois do "CREATE "
+//				o nome digitado tem que ser maior que 4 porque ".DBF"=4 caracteres
+				if(strlen(nomeDBF) > 4) 
+				{
+					printf("\nData do arquivo .DBF (dd/MM/yyyy): ");
+					fflush(stdin);
+					gets(data);
+					printf("\nHora do arquivo .DBF (hh:mm): ");
+					fflush(stdin);
+					gets(hora);
+					
+					create(&auxListUnid,nomeDBF,data,hora);
+				}
+				else
+					printf("\nNao foi passado o nome de um arquivo valido!\n");
 			}
 			else
 				printf("\nVoce ainda nao definiu a unidade!\n");
-			
 		}
 		else
 		if(strcmp(comandoDbase,"QUIT") == 0)
@@ -361,20 +402,17 @@ int main(void)
 				printf("\nVoce ainda nao definiu a unidade!\n");
 		}
 		else
-		if(strcmp(comandoDbase,"USE") == 0)
+		if(strncmp(comandoDbase,"USE ",4) == 0 || strncmp(comandoDbase,"USE",3) == 0)
 		{
+			strcpy(nomeDBF,comandoDbase+4);
 			if(auxListUnid != NULL)
 			{
 				if(auxListUnid->arqs != NULL) //contem arquivos dentro da unidade
-				{
-					printf("\nNome arquivo: ");
-					fflush(stdin);
-					gets(nomeDBF);
-					
+				{	
 					use(&aberto,auxListUnid,nomeDBF);
 				}
 				else //não contem arquivos dentro da unidade
-					printf("\nNao contem arquivos dentro da unidade!\n");
+					printf("\nNao contem nenhum arquivo na unidade!\n");
 			}
 			else
 				printf("\nVoce ainda nao definiu a unidade!\n");
@@ -389,6 +427,11 @@ int main(void)
 			}
 			else
 				printf("\nNao contem arquivos dentro da unidade!\n");
+		}
+		else
+		if(strcmp(comandoDbase,"CLEAR") == 0)
+		{
+			system("cls");
 		}
 		else
 			printf("\nNao existe esse comando!\n");

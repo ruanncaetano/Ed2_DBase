@@ -3,6 +3,7 @@
 #include<string.h>
 #include<stdlib.h>
 #include<ctype.h>
+#include<time.h>
 
 //Estrutura union do trabalho com os campos passado pelo professor
 union Dados
@@ -44,11 +45,19 @@ struct Campo
 typedef struct Campo campo;
 
 //struct que contem os dados do arquivo
+struct data
+{
+	int dia, mes, ano;
+};
+struct hora
+{
+	int hora, min;
+};
 struct Arquivo
 {
 	char nomeDBF[50];
-	char data[11];
-	char hora[6];
+	struct data date;
+	struct hora hora;
 	struct Status *status;
 	struct Campo *campos;
 	struct Arquivo *prox, *ant;
@@ -63,7 +72,7 @@ struct Unidade
 	struct Unidade *top, *bottom;
 };
 typedef struct Unidade unidade;
-
+ 
 
 //função que cria as duas unidades de disco automatico
 void criarUnidade(unidade **listUnid) //OK
@@ -89,7 +98,7 @@ void criarUnidade(unidade **listUnid) //OK
 //Função que realiza a operação de SetDefaultTo (APENAS TESTE)
 void setDefaultTo(unidade **auxListUnid, unidade *listUnid, char unid[50]) //OK
 {
-	if(strcmp(unid,"SET DEFAULT TO C:") == 0) //se caso a unidade for a C:
+	if(stricmp(unid,"c:") == 0) //se caso a unidade for a C:
 	{
 		*auxListUnid = listUnid;
 	}
@@ -124,22 +133,35 @@ int validaType(campo *novoCampo, char type[20])
 }
 
 //função que cria um novo arquivo dentro de algum disco
-void create(unidade **auxListUnid, char nomeDBF[50], char data[11], char hora[6]) //OK
+void create(unidade **auxListUnid, char nomeDBF[50]) //OK
 {
+	struct tm *dataAtual;  
 	arquivo *novoArq, *atualArq;
 	novoArq = (arquivo*)malloc(sizeof(arquivo));
 	
 	strcpy(novoArq->nomeDBF,nomeDBF);
-	strcpy(novoArq->data,data);
-	strcpy(novoArq->hora,hora);
 	novoArq->status = NULL;
 	novoArq->campos = NULL;
 	novoArq->prox = NULL;
 	
+	//prints teste
+	printf("\nPrint 1");
+	
+		//está bugando e quebrando o programa
+//	novoArq->date.dia = dataAtual->tm_mday;
+//    novoArq->date.mes = dataAtual->tm_mon + 1;
+//    novoArq->date.ano = dataAtual->tm_year;
+//    novoArq->hora.hora = dataAtual->tm_hour;
+//    novoArq->hora.min = dataAtual->tm_min;
+
+	//prints teste
+	printf("\nPrint 2");
 	if((*auxListUnid)->arqs == NULL) //se caso ainda não tiver nenhum arquivo
 	{
 		(*auxListUnid)->arqs = novoArq;
 		novoArq->ant = NULL;
+		//prints teste
+		printf("\nPrint 3");
 	}
 	else
 	{
@@ -149,6 +171,8 @@ void create(unidade **auxListUnid, char nomeDBF[50], char data[11], char hora[6]
 			
 		novoArq->ant = atualArq;
 		atualArq->prox = novoArq;
+		//prints teste
+		printf("\nPrint 4");
 	}
 	
 //	PARA CRIAR OS CAMPOS DE DENTRO DO ARQUIVO CRIADO PELO USUARIO (AINDA FALTA ARRUMAR)
@@ -216,8 +240,8 @@ void dir(unidade *auxListUnid) //OK
 		{
 			printf("\n*** EXIBINDO DADOS DOS ARQUIVOS ***");
 			printf("\nNome DBF: %s",arqAux->nomeDBF);
-			printf("\nData: %s",arqAux->data);
-			printf("\nHora: %s\n",arqAux->hora);
+			printf("\nData: %d/%d/%d",arqAux->date.dia,arqAux->date.mes,arqAux->date.ano);
+			printf("\nHora: %d:%d\n",arqAux->hora.hora,arqAux->hora.min);
 			arqAux = arqAux->prox;
 		}
 	}
@@ -232,59 +256,18 @@ void use(arquivo **aberto, unidade *auxListUnid, char nomeDBF[50]) //OK
 
 	arquivo *auxArq = auxListUnid->arqs;
 	
-	while(auxArq != NULL && strcmp(auxArq->nomeDBF,nomeDBF) != 0)
+	while(auxArq != NULL && stricmp(auxArq->nomeDBF,nomeDBF) != 0)
 		auxArq = auxArq->prox;
 			
 	if(auxArq != NULL) //achou
 	{
 		*aberto = auxArq;
 		printf("\nArquivo %s aberto com sucesso!",(*aberto)->nomeDBF);
-//		para testar se está sendo feito o apontamento correto
-//		printf("\n### ARQUIVO QUE O PONTEIRO ABERTO ESTA APONTANDO ###");
-//		printf("\nNome DBF: %s",(*aberto)->nomeDBF);
-//		printf("\nData: %s",(*aberto)->data);
-//		printf("\nHora: %s",(*aberto)->hora);
 	}	
 	else //não achou o arquivo
 		printf("\nArquivo nao encontrado!\n");
 	
 }
-
-//função que vai montar a estrutura com os campos presente no arquivo
-//void listStructure(arquivo *aberto)
-//{
-//	//criando a caixa "CODIGO"
-//	campo *auxCod = (campo*)malloc(sizeof(campo));
-//	strcpy(auxCod->fieldName,"CODIGO");
-//	auxCod->type = 'N';
-//	auxCod->width = 8;
-//	auxCod->dec = 0;
-//	auxCod->pAtual = auxCod->pDados = NULL;
-//	
-//	//criando a caixa "NOME"
-//	campo *auxNome = (campo*)malloc(sizeof(campo));
-//	strcpy(auxNome->fieldName,"NOME");
-//	auxNome->type = 'C';
-//	auxNome->width = 20;
-//	auxNome->dec = 0;
-//	auxNome->pAtual = auxNome->pDados = NULL;
-//	
-//	//criando a caixa "FONE"
-//	campo *auxFone = (campo*)malloc(sizeof(campo));
-//	strcpy(auxFone->fieldName,"FONE");
-//	auxFone->type = 'C';
-//	auxFone->width = 10;
-//	auxFone->dec = 0;
-//	auxFone->pAtual = auxFone->pDados = NULL;
-//	
-//	
-//	//aqui no final é ligar uma caixa na outra
-//	auxCod->prox = auxNome;
-//	auxNome->prox = auxFone;
-//	auxFone->prox = NULL;
-//	
-//	aberto->campos = auxCod;
-//}
 
 void listStructure(arquivo *aberto, unidade *auxListUnid)
 {
@@ -294,7 +277,7 @@ void listStructure(arquivo *aberto, unidade *auxListUnid)
 	printf("\n. LIST STRUCTURE");
 	printf("\nStructure for database\t: %s%s",auxListUnid->unid,auxArq->nomeDBF);
 	printf("\nNumber of data records\t: 0");
-	printf("\nDate of last update   \t: %s",auxArq->data);
+	printf("\nDate of last update   \t: %d/%d/%d",auxArq->date.dia,auxArq->date.mes,auxArq->date.ano);
 	
 	if(auxCampo != NULL)
 	{
@@ -333,108 +316,481 @@ void listStructure(arquivo *aberto, unidade *auxListUnid)
 		
 }
 
-int main(void)
+//Função que o Gui fez para buscar se um comando é valido
+int buscaFuncao(char *comando, char *resto)
 {
+	char comandos[][20] = {
+		"set default to", "create", "dir", "quit", "use", "list structure",
+        "append", "list", "list for", "clear", "locate for", "goto",
+        "display", "edit", "delete", "recall", "set deleted", "pack", "zap"
+	};
+	
+	int tamanho = sizeof(comandos) / sizeof(comandos[0]);
+	for(int i=0; i<tamanho; i++)
+	{
+		if(stricmp(comando,comandos[i]) == 0)
+			return 1;
+	}
+	return 0;
+}
+
+// Função para ler e tokenizar a string
+void LerPromt(char leitura[50], char *comando, char *resto)
+{
+    // Variável para armazenar o comando composto
+	char comando_composto[100] = "";
+	
+	// Aloca memória para a cópia da string
+    char *copia = (char *)malloc((strlen(leitura) + 1) * sizeof(char)); // não sei se isso esta certo
+    if(copia == NULL)
+	{
+        printf("\nErro ao alocar memoria.\n");
+    }
+	else
+	{
+	    // Copia a string original para a cópia
+	    strcpy(copia, leitura);
+	
+	    // Ignorar espaços no começo
+	    char *inicio = copia;
+	    while(*inicio == ' ')
+		{
+	        inicio++;
+	    }
+		char *fim_palavra = inicio;
+	    // Pega a primeira palavra
+	    while(*fim_palavra != ' ' && *fim_palavra != '\0')
+		{
+	        fim_palavra++;
+	    }
+	
+	    // Separa a primeira palavra
+	    if(*fim_palavra == ' ')
+		{
+	        *fim_palavra = '\0'; // Termina a primeira palavra
+	        strcat(comando_composto, inicio);
+	        inicio = fim_palavra + 1;
+	
+	        // Remove espaços iniciais do restante
+	        while(*inicio == ' ')
+			{
+	            inicio++;
+	        }
+	    }
+		else
+		{
+	        strcat(comando_composto, inicio);
+	        inicio = fim_palavra; // Fim da string
+	    }
+	
+	    // Verifica se a primeira palavra é um comando válido
+	    int buscaSeE = buscaFuncao(comando_composto, inicio);
+	
+	    // Loop para concatenar mais palavras enquanto a busca retornar 0
+	    while(buscaSeE == 0 && *inicio != '\0')
+		{
+	        // Pega a próxima palavra
+	        fim_palavra = inicio;
+	        while(*fim_palavra != ' ' && *fim_palavra != '\0')
+			{
+	            fim_palavra++;
+	        }
+	
+	        // Concatena a próxima palavra ao comando composto
+	        if(*fim_palavra == ' ')
+			{
+	            *fim_palavra = '\0'; // Termina a próxima palavra
+	            strcat(comando_composto, " ");
+	            strcat(comando_composto, inicio);
+	            inicio = fim_palavra + 1;
+	
+	            // Remove espaços iniciais do restante
+	            while(*inicio == ' ')
+				{
+	                inicio++;
+	            }
+	        }
+			else
+			{
+	            strcat(comando_composto, " ");
+	            strcat(comando_composto, inicio);
+	            inicio = fim_palavra; // Fim da string
+	        }
+	
+	        // Verifica se o comando composto é válido
+	        buscaSeE = buscaFuncao(comando_composto, inicio);
+	    }
+		strcpy(comando,comando_composto);
+		strcpy(resto,inicio);
+	    // Libera a memória alocada para a cópia
+	    free(copia);
+	}
+}
+
+int main(void)
+{ 
 	char comandoDbase[50], unid[3];
 	char nomeDBF[50], data[11], hora[6];
+	
+	char comando[50],resto[50];
 	
 	unidade *listUnid = NULL;
 	unidade *auxListUnid = NULL; //ponteiro para manipular o disco C: e D:
 	criarUnidade(&listUnid); //cria as duas unidades padrão - C: e D:
-	
 	//esse ponteiro vamos usar apenas para manipular o arquivo que o usuario deseja
-	arquivo *aberto = NULL;
+	arquivo *aberto=NULL;
+	
 	
 	do
 	{
-		printf("\nDigite o comando do DBase: ");
+		printf("\nComandoDBase: ");
 		fflush(stdin);
 		gets(comandoDbase);
-		
-//		não sei se pode utilizar esse comando, mandei mensagem para o professor perguntando
-		if(strncmp(comandoDbase, "SET DEFAULT TO ", 15) == 0 || strncmp(comandoDbase, "SET DEFAULT TO", 14) == 0)
+		LerPromt(comandoDbase,comando,resto);
+		//cada if pode tratar o *resto* como precisar
+		if(stricmp(comando, "Set Default To") == 0) //OK - TESTADO!!!
 		{
-		    if(strcmp(comandoDbase, "SET DEFAULT TO C:") == 0 || strcmp(comandoDbase, "SET DEFAULT TO D:") == 0)
-		    {
-		        setDefaultTo(&auxListUnid, listUnid, comandoDbase);
-		        aberto = NULL;
-//		        coloquei o aberto para NULL aqui porque toda vez que a pessoa mudar o disco
-//		        ela tem que ser obrigada a dizer qual arquivo ela quer abrir
-		    }
-		    else
-		        printf("\nNao existe essa unidade!\n");
-		}
-		else
-		if(strncmp(comandoDbase,"CREATE ",7) == 0 || strncmp(comandoDbase,"CREATE",6) == 0) //comparando apenas o "CREATE "
+			if(stricmp(resto,"c:") == 0 || stricmp(resto,"d:") == 0)
+	       		setDefaultTo(&auxListUnid, listUnid, resto);
+	       	else
+	       		printf("\nUnidade nao existe!\n");
+	    }
+	    else
+		if(stricmp(comando, "create") == 0)
 		{
 			if(auxListUnid != NULL)
 			{
-				strcpy(nomeDBF,comandoDbase+7); //copiando tudo depois do "CREATE "
-//				o nome digitado tem que ser maior que 4 porque ".DBF"=4 caracteres
-				if(strlen(nomeDBF) > 4) 
-				{
-					printf("\nData do arquivo .DBF (dd/MM/yyyy): ");
-					fflush(stdin);
-					gets(data);
-					printf("\nHora do arquivo .DBF (hh:mm): ");
-					fflush(stdin);
-					gets(hora);
-					
-					create(&auxListUnid,nomeDBF,data,hora);
-				}
+				if(strlen(resto) > 4) //estou comparando > 4 = ".dbf"
+					create(&auxListUnid,resto);
 				else
-					printf("\nNao foi passado o nome de um arquivo valido!\n");
+					printf("\nVoce nao passou um nome!\n");
+			}	
+	        else
+	        	printf("\nVoce ainda nao escolheu uma unidade!\n");
+	    }
+	    else
+	    if(stricmp(comando, "dir") == 0)
+		{
+			if(auxListUnid != NULL)
+	    		dir(auxListUnid);
+	    	else
+	    		printf("\nVoce ainda nao escolheu uma unidade!\n");
+	    }
+	    else
+		if(stricmp(comando, "use") == 0)
+		{
+			if(auxListUnid != NULL)
+				use(&aberto,auxListUnid,resto);
+			else
+				printf("\nVoce ainda nao escolheu uma unidade!\n");
+	    }
+	    else
+		if(stricmp(comando, "list structure") == 0)
+		{
+			if(auxListUnid != NULL)
+			{
+				if(aberto != NULL)
+					listStructure(aberto,auxListUnid);
+				else
+					printf("\nVoce ainda nao abriu um arquivo!\n");
 			}
 			else
-				printf("\nVoce ainda nao definiu a unidade!\n");
+				printf("\nVoce ainda nao escolheu uma unidade!\n");
 		}
 		else
-		if(strcmp(comandoDbase,"QUIT") == 0)
+		if(stricmp(comando, "quit") == 0)
 		{
 			printf("\nAmbiente DBase encerrado!\n");
 		}
 		else
-		if(strcmp(comandoDbase,"DIR") == 0)
-		{
-			if(auxListUnid != NULL)
-				dir(auxListUnid);
-			else
-				printf("\nVoce ainda nao definiu a unidade!\n");
-		}
-		else
-		if(strncmp(comandoDbase,"USE ",4) == 0 || strncmp(comandoDbase,"USE",3) == 0)
-		{
-			strcpy(nomeDBF,comandoDbase+4);
-			if(auxListUnid != NULL)
-			{
-				if(auxListUnid->arqs != NULL) //contem arquivos dentro da unidade
-				{	
-					use(&aberto,auxListUnid,nomeDBF);
-				}
-				else //não contem arquivos dentro da unidade
-					printf("\nNao contem nenhum arquivo na unidade!\n");
-			}
-			else
-				printf("\nVoce ainda nao definiu a unidade!\n");
-			
-		}
-		else
-		if(strcmp(comandoDbase,"LIST STRUCTURE") == 0)
-		{
-			if(aberto != NULL) //contem um arquivo
-			{
-				listStructure(aberto,auxListUnid);
-			}
-			else
-				printf("\nNao contem arquivos dentro da unidade!\n");
-		}
-		else
-		if(strcmp(comandoDbase,"CLEAR") == 0)
+		if(stricmp(comando,"clear") == 0)
 		{
 			system("cls");
 		}
 		else
 			printf("\nNao existe esse comando!\n");
-		getch();	
-	}while(strcmp(comandoDbase,"QUIT") != 0);
+			
+		getch();
+	}while(stricmp(comando,"quit") != 0);
 }
+
+// Função para concatenar strings manualmente
+//void concatenarStrings(char *destino, const char *origem) {
+//    // Encontra o final da string de destino
+//    while (*destino != '\0') {
+//        destino++;
+//    }
+
+//    // Copia os caracteres da origem para o destino
+//    while (*origem != '\0') {
+//        *destino = *origem;
+//        destino++;
+//        origem++;
+//    }
+
+//    // Adiciona o terminador nulo no final
+//    *destino = '\0';
+//}
+
+//// Função para ler e tokenizar a string
+//void LerPromt(char *leitura, char *comando, char *resto) {
+//    // Aloca memória para a cópia da string
+//    char *copia = (char *)malloc((strlen(leitura) + 1) * sizeof(char));
+//    if (copia == NULL) {
+//        fprintf(stderr, "Erro ao alocar memória.\n");
+//        return;
+//    }
+
+//    // Copia a string original para a cópia
+//    strcpy(copia, leitura);
+
+//    // Ignorar espaços no começo
+//    char *inicio = copia;
+//    while (*inicio == ' ') {
+//        inicio++;
+//    }
+
+//    // Variável para armazenar o comando composto
+//    char comando_composto[100] = "";
+
+//    // Pega a primeira palavra
+//    char *fim_palavra = inicio;
+//    while (*fim_palavra != ' ' && *fim_palavra != '\0') {
+//        fim_palavra++;
+//    }
+
+//    // Separa a primeira palavra
+//    if (*fim_palavra == ' ') {
+//        *fim_palavra = '\0'; // Termina a primeira palavra
+//        concatenarStrings(comando_composto, inicio);
+//        inicio = fim_palavra + 1;
+
+//        // Remove espaços iniciais do restante
+//        while (*inicio == ' ') {
+//            inicio++;
+//        }
+//    } else {
+//        concatenarStrings(comando_composto, inicio);
+//        inicio = fim_palavra; // Fim da string
+//    }
+
+//    // Verifica se a primeira palavra é um comando válido
+//    int buscaSeE = buscaFuncao(comando_composto, inicio);
+
+//    // Loop para concatenar mais palavras enquanto a busca retornar 0
+//    while (buscaSeE == 0 && *inicio != '\0') {
+//        // Pega a próxima palavra
+//        fim_palavra = inicio;
+//        while (*fim_palavra != ' ' && *fim_palavra != '\0') {
+//            fim_palavra++;
+//        }
+
+//        // Concatena a próxima palavra ao comando composto
+//        if (*fim_palavra == ' ') {
+//            *fim_palavra = '\0'; // Termina a próxima palavra
+//            concatenarStrings(comando_composto, " ");
+//            concatenarStrings(comando_composto, inicio);
+//            inicio = fim_palavra + 1;
+
+//            // Remove espaços iniciais do restante
+//            while (*inicio == ' ') {
+//                inicio++;
+//            }
+//        } else {
+//            concatenarStrings(comando_composto, " ");
+//            concatenarStrings(comando_composto, inicio);
+//            inicio = fim_palavra; // Fim da string
+//        }
+
+//        // Verifica se o comando composto é válido
+//        buscaSeE = buscaFuncao(comando_composto, inicio);
+//    }
+
+//    // Copia o comando composto para a variável de saída "comando"
+//    strcpy(comando, comando_composto);
+
+//    // Copia o restante da string para a variável de saída "resto"
+//    strcpy(resto, inicio);
+
+//    // Libera a memória alocada para a cópia
+//    free(copia);
+//}
+
+
+
+//VERSÃO ANTERIOR
+// Função para buscar e processar o comando
+//int buscaFuncao(char *comando, char *resto)
+//{
+//	int flag=1;
+//  // resto deve ser verificado dentro da propria função
+//  // exemplo: comando : locale for resto: name = "Ruan" 
+//  // resto deve ser tratado dentro da função locale
+//
+//	if(stricmp(comando, "set default to") == 0)
+//        return 1;
+//    else
+//	if(stricmp(comando, "create") == 0)
+//        return 1;
+//    else
+//	if(stricmp(comando, "dir") == 0)
+//        return 1;
+//    else
+//	if(stricmp(comando, "quit") == 0)
+//        return 1;
+//    else
+//	if(stricmp(comando, "use") == 0)
+//        return 1;
+//    else
+//	if(stricmp(comando, "list structure") == 0)
+//        return 1;
+//    else
+//	if(stricmp(comando, "append") == 0)
+//    	return 1;
+//    else
+//	if(stricmp(comando, "liste") == 0)
+//        return 1;
+//    else
+//	if(stricmp(comando, "list for") == 0)
+//        return 1;
+//    else
+//	if(stricmp(comando, "clear") == 0)
+//        return 1;
+//    else
+//	if(stricmp(comando, "locate for") == 0)
+//        return 1;
+//    else
+//	if(stricmp(comando, "goto") == 0)
+//        return 1;
+//	else
+//	if(stricmp(comando, "display") == 0)
+//		 return 1;
+//	if(stricmp(comando, "edit") == 0)
+//        return 1;
+//    else
+//	if(stricmp(comando, "delete") == 0)
+//        return 1;
+//    else
+//	if(stricmp(comando, "recall") == 0)
+//		return 1;
+//	else
+//		flag = 0;
+//	// fiz ate o 15
+//	return 0;
+//}
+
+
+//// Função para ler e tokenizar a string
+//void LerPromt(char *leitura, char *comando,char *resto) {
+//	
+//    // Aloca memória para a cópia da string
+//    char *copia = (char *)malloc((strlen(leitura) + 1) * sizeof(char));
+//    if (copia == NULL) {
+//        fprintf(stderr, "Erro ao alocar memória.\n");
+//        return;
+//    }
+
+//    // Copia a string original para a cópia
+//    strcpy(copia, leitura);
+
+//    // Ignorar espaços no começo
+//    char *inicio = copia;
+//    while (*inicio == ' ') {
+//        inicio++;
+//    }
+
+//    // Encontrar o fim da primeira palavra
+//    char *fim_primeira_palavra = inicio;
+//    while (*fim_primeira_palavra != ' ' && *fim_primeira_palavra != '\0') {
+//        fim_primeira_palavra++;
+//    }
+
+//    // Separar a primeira palavra
+//    char *primeira_palavra = NULL;
+
+//    if (*fim_primeira_palavra == ' ') {
+//        *fim_primeira_palavra = '\0'; // Termina a primeira palavra
+//        primeira_palavra = inicio;
+//        resto = fim_primeira_palavra + 1;
+
+//        // Remover espaços iniciais do restante
+//        while (*resto == ' ') {
+//            resto++;
+//        }
+//    } else {
+//        primeira_palavra = inicio;
+//        resto = ""; // Se não houver restante, define como string vazia
+//    }
+
+//    // Verifica se a primeira palavra é um comando válido
+//    buscaFuncao(primeira_palavra, resto,auxListUnid);
+
+//    // Se não for válido, pega a segunda palavra e verifica as duas juntas
+//    if (strlen(resto) > 0) {
+//        char *segunda_palavra = NULL;
+//        char *fim_segunda_palavra = resto;
+
+//        // Encontrar o fim da segunda palavra
+//        while (*fim_segunda_palavra != ' ' && *fim_segunda_palavra != '\0') {
+//            fim_segunda_palavra++;
+//        }
+
+//        // Separar a segunda palavra
+//        if (*fim_segunda_palavra == ' ') {
+//            *fim_segunda_palavra = '\0'; // Termina a segunda palavra
+//            segunda_palavra = resto;
+//            resto = fim_segunda_palavra + 1;
+
+//            // Remover espaços iniciais do restante
+//            while (*resto == ' ') {
+//                resto++;
+//            }
+//        } else {
+//            segunda_palavra = resto;
+//            resto = ""; // Se não houver restante, define como string vazia
+//        }
+
+//        // Concatena a primeira e a segunda palavra para verificar
+//        char comando_composto[100];
+//        snprintf(comando_composto, sizeof(comando_composto), "%s %s", primeira_palavra, segunda_palavra);
+
+//        // Verifica se o comando composto é válido
+//        buscaFuncao(comando_composto, resto,auxListUnid);
+
+//        // Se ainda não for válido, pega a terceira palavra e verifica as três juntas
+//        if (strlen(resto) > 0) {
+//            char *terceira_palavra = NULL;
+//            char *fim_terceira_palavra = resto;
+
+//            // Encontrar o fim da terceira palavra
+//            while (*fim_terceira_palavra != ' ' && *fim_terceira_palavra != '\0') {
+//                fim_terceira_palavra++;
+//            }
+
+//            // Separar a terceira palavra
+//            if (*fim_terceira_palavra == ' ') {
+//                *fim_terceira_palavra = '\0'; // Termina a terceira palavra
+//                terceira_palavra = resto;
+//                resto = fim_terceira_palavra + 1;
+
+//                // Remover espaços iniciais do restante
+//                while (*resto == ' ') {
+//                    resto++;
+//                }
+//            } else {
+//                terceira_palavra = resto;
+//                resto = ""; // Se não houver restante, define como string vazia
+//            }
+
+//            // Concatena as três palavras para verificar
+//            char comando_triplo[100];
+//            snprintf(comando_triplo, sizeof(comando_triplo), "%s %s %s", primeira_palavra, segunda_palavra, terceira_palavra);
+
+//            // Verifica se o comando triplo é válido
+//            buscaFuncao(comando_triplo, resto,auxListUnid);
+//        }
+//    }
+
+//    // Libera a memória alocada para a cópia
+//    free(copia);
+//}

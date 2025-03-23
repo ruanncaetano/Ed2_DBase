@@ -614,6 +614,68 @@ void list(arquivo *aberto, status *posStatus)
     }
 }
 
+void localeFor(arquivo *aberto, char *campo, void *busca) 
+{
+	int record=1;
+    if (aberto == NULL) {
+        printf("\nNenhum arquivo aberto!\n");
+        return;
+    }
+	printf("Campo: |%s|\n", campo);
+	printf("Valor: |%s|\n", busca);
+
+    Campo *auxCampo = aberto-> campos;
+    while (auxCampo != NULL)
+	 {
+        if (strcmp(auxCampo->fieldName, campo) == 0)
+		 {
+            // Campo encontrado, agora verificar o valor
+            celula *auxCelula = auxCampo->pDados;
+            while (auxCelula != NULL) 
+			{
+                switch (auxCampo->type)
+				 {
+                    case 'C': // Character
+                        if (strcmp(auxCelula->dados.valorC, (char*)busca) == 0) 
+						{
+                            printf("\nRecord = %d\n",record);
+                        }
+                        break;
+                    case 'N': // Numeric
+                        if (auxCelula->dados.valorN == *(int*)busca) 
+						{
+                              printf("\nRecord = %d\n",record);
+                        }
+                        break;
+                    case 'D': // Date
+                        if (strcmp(auxCelula->dados.valorD, (char*)busca) == 0) 
+						{
+                            printf("\nRecord = %d\n",record);
+                        }
+                        break;
+                    case 'L': // Logical
+                        if (auxCelula->dados.valorL == *(char*)busca)
+						 {
+                              printf("\nRecord = %d\n",record);
+                        }
+                        break;
+                    case 'M': // Memo
+                        if (strcmp(auxCelula->dados.valorM, (char*)busca) == 0) 
+						{
+                            printf("\nRecord = %d\n",record);
+                        }
+                        break;
+                }
+                record++;
+                auxCelula = auxCelula->prox;
+            }
+            printf("\nValor nao encontrado no campo %s.\n", campo);
+            return;
+        }
+        auxCampo = auxCampo->prox;
+    }
+  
+}
 
 int main(void)
 { 
@@ -728,6 +790,62 @@ int main(void)
 				}
 				else
 					printf("\nVoce ainda nao abriu um arquivo!\n");
+			}
+			else
+				printf("\nVoce ainda nao escolheu uma unidade!\n");
+		}
+		else
+		if(stricmp(comando,"locate for") == 0)
+		{
+			if(auxListUnid != NULL)
+			{
+				int i=0,j=0,cont=strlen(resto);
+				char aux[50]={0}, copia[50]={0};
+				strcpy(aux,resto);
+				// limapando a string de = e ""
+				while(cont >0)
+				{
+					if((aux[i] >= 'A' && aux[i]<='Z') || (aux[i] >= 'a' && aux[i]<='z') || (aux[i] >= '0' && aux[i]<='9') || aux[i] == ' ')
+					{
+						copia[j] = aux[i];
+						j++;
+					}
+					
+					i++;
+					cont--;
+				}
+				copia[j]='\0';
+				
+				
+				//////////
+				
+				char campo2[50]={0},nome[50]={0};
+				int i2=0,j2=0;
+				
+				
+				// serapra o campo de busca
+				while(copia[i2] != ' ' && copia[i2] != '\0')
+				{
+					campo2[i2]=copia[i2];
+					i2++;
+				}
+				campo2[i2] = '\0'; 
+				// pega o resto de tudo, que é a informação que quer buscar
+				while(copia[i2] != '\0')
+				{
+					if(copia[i2] != ' ')
+					{
+						nome[j2]=copia[i2];
+						j2++;
+					}
+				
+					i2++;
+				}
+				nome[j2] = '\0';
+				printf("Campo: |%s|\n", campo2);
+				printf("Valor: |%s|\n", nome);
+	
+				localeFor(aberto,campo2,nome);
 			}
 			else
 				printf("\nVoce ainda nao escolheu uma unidade!\n");

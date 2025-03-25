@@ -27,7 +27,7 @@ typedef struct Celula celula;
 struct Status
 {
 	//não sei se tem o tipo Boolean em C
-	int status; //1-True | 0-False
+	char status[6]; //True | False
 	struct Status *prox;
 };
 typedef struct Status status;
@@ -418,7 +418,7 @@ void append(arquivo *aberto, status **posStatus)
 	campo *auxCampo = aberto->campos;
 	
 	status *novoStatus = (status*)malloc(sizeof(status));
-	novoStatus->status = 1; // 1 =True
+	strcpy(novoStatus->status,"true"); // 1 =True
 	novoStatus->prox = NULL;
 	
 	if(*posStatus == NULL)
@@ -559,39 +559,39 @@ void list(arquivo *aberto, status *posStatus)
     
     system("cls");
     
-    int pos = 1, col = 15, lin = 7;
+    int pos = 1, col = 1, lin = 1;
     
-    gotoxy(5,5);
+    gotoxy(col,lin);
     printf(". LIST");
-    gotoxy(5,6);
+    lin++;
+    gotoxy(col,lin);
     printf("Record# ");
 
     // Exibir nomes dos campos
     auxCampo = aberto->campos;
     while (auxCampo != NULL) 
     {
-        gotoxy(col,6);
+    	col += 20;
+        gotoxy(col,lin);
         printf("%s", auxCampo->fieldName);
-        col += 15;
         auxCampo = auxCampo->prox;
     }
+    lin++;
 
     // Exibir dados armazenados
     auxStatus = posStatus;  // Reinicia ponteiro de status
-    while (auxStatus != NULL) 
+    while(auxStatus != NULL) 
     {
-        if (auxStatus->status == 1) 
+        if(stricmp(auxStatus->status,"true") == 0) 
         {
-            col = 5;
+            col = 1;
             gotoxy(col, lin);
             printf("%d", pos);
 
             auxCampo = aberto->campos;
             while (auxCampo != NULL) 
             {
-                //auxCelula = auxCampo->pAtual; // Usa ponteiro auxiliar sem alterar `pAtual`
-                col += 15;
-
+            	col += 20;
                 if(auxCampo != NULL) 
                     printUnion(auxCampo, col, lin);
 				
@@ -675,6 +675,72 @@ void localeFor(arquivo *aberto, char *campo, void *busca)
         auxCampo = auxCampo->prox;
     }
   
+}
+
+arquivo *buscaStatusAtivo(arquivo *auxArq, int &pos)
+{
+	while(stricmp(auxArq->status->status,"true") != 0 && auxArq->status != NULL)
+	{
+		auxArq->status = auxArq->status->prox;
+		auxArq->campos = auxArq->campos->prox;
+		pos++;
+	}
+	
+	if(stricmp(auxArq->status->status,"true") == 0)
+		return auxArq;
+	else
+		return NULL;
+}
+
+void display(arquivo *auxAberto)
+{
+	campo *auxCampo = auxAberto->campos;
+	arquivo *auxArq = auxAberto;
+	
+	system("cls");
+    
+    int pos = 1, col = 1, lin = 1;
+    
+    gotoxy(col,lin);
+    printf(". DISPLAY");
+    lin++;
+    gotoxy(col,lin);
+    printf("Record# ");
+
+    //exibir nome dos campos
+    while(auxCampo != NULL)
+    {
+    	col += 20;
+        gotoxy(col,lin);
+        printf("%s", auxCampo->fieldName);
+        auxCampo = auxCampo->prox;
+    }
+    lin++;
+    //resetando o auxCampo
+    auxCampo = auxAberto->campos;
+
+	auxArq = buscaStatusAtivo(auxArq,pos);
+	if(auxArq != NULL) //achou um registro com status true
+	{
+		status *auxStatus = auxArq->status;
+		
+		col = 1;
+        gotoxy(col, lin);
+        printf("%d", pos);
+
+        auxCampo = auxArq->campos;
+        while(auxCampo != NULL) 
+        {
+            col += 20;
+
+            if(auxCampo != NULL) 
+                printUnion(auxCampo, col, lin);
+                
+            auxCampo = auxCampo->prox;
+        }
+	}
+	else
+		printf("\nNao achou um registro ativo!\n");
 }
 
 int main(void)
@@ -764,7 +830,6 @@ int main(void)
 			{
 				if(aberto != NULL)
 				{
-					printf("\nTESTE APPEND 3");
 					if(aberto->campos != NULL) //ele tem que ter criado os campos
 						append(aberto,&posStatus);
 					else
@@ -846,6 +911,26 @@ int main(void)
 				printf("Valor: |%s|\n", nome);
 	
 				localeFor(aberto,campo2,nome);
+			}
+			else
+				printf("\nVoce ainda nao escolheu uma unidade!\n");
+		}
+		else
+		if(stricmp(comando,"display") == 0)
+		{
+			if(auxListUnid != NULL)
+			{
+				if(aberto != NULL)
+				{
+					if(aberto->campos->pAtual != NULL)
+					{
+						display(aberto);
+					}
+					else
+						printf("\nVoce ainda nao inseriu um registro!\n");
+				}
+				else
+					printf("\nVoce ainda nao abriu um arquivo!\n");
 			}
 			else
 				printf("\nVoce ainda nao escolheu uma unidade!\n");

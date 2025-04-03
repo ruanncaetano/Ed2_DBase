@@ -487,61 +487,28 @@ void append(arquivo *aberto, status **posStatus)
 	}
 }
 
-//void printUnion(campo *auxCampo, int col, int lin)
-//{
-//	if(auxCampo->type == 'N')
-//	{
-//		gotoxy(col,lin);
-//		printf("%.0f",auxCampo->pAtual->dados.valorN);
-//	}
-//	else
-//	if(auxCampo->type == 'L')
-//	{
-//		gotoxy(col,lin);
-//		printf("%c",auxCampo->pAtual->dados.valorL);
-//	}
-//	else
-//	if(auxCampo->type == 'C')
-//	{
-//		gotoxy(col,lin);
-//		printf("s",auxCampo->pAtual->dados.valorC);
-//	}
-//	else
-//	if(auxCampo->type == 'D')
-//	{
-//		gotoxy(col,lin);
-//		printf("%s",auxCampo->pAtual->dados.valorD);
-//	}
-//	else
-//	if(auxCampo->type == 'M')
-//	{
-//		gotoxy(col,lin);
-//		printf("%s",auxCampo->pAtual->dados.valorM);
-//	}
-//}
-
-void printUnion(campo *auxCampo, int col, int lin)
+void printUnion(celula *auxCelula,char type, int col, int lin)
 {
-    if (auxCampo->pAtual != NULL)
+    if(auxCelula != NULL)
 	{
 		gotoxy(col, lin);
 
-	    switch (auxCampo->type) 
+	    switch(type) 
 	    {
 	        case 'N': 
-				printf("%.0f", auxCampo->pAtual->dados.valorN); 
+				printf("%.0f", auxCelula->dados.valorN); 
 				break;
 	        case 'L':
-				printf("%c", auxCampo->pAtual->dados.valorL);
+				printf("%c", auxCelula->dados.valorL);
 				break;
 	        case 'C':
-				printf("%s", auxCampo->pAtual->dados.valorC);
+				printf("%s", auxCelula->dados.valorC);
 				break;
 	        case 'D': 
-				printf("%s", auxCampo->pAtual->dados.valorD);
+				printf("%s", auxCelula->dados.valorD);
 				break;
 	        case 'M': 
-				printf("%s", auxCampo->pAtual->dados.valorM);
+				printf("%s", auxCelula->dados.valorM);
 				break;
 	        default: 
 				printf("[ERRO]");
@@ -553,65 +520,55 @@ void printUnion(campo *auxCampo, int col, int lin)
 
 void list(arquivo *aberto, status *posStatus)
 {
-    campo *auxCampo;
+    campo *auxCampo = aberto->campos;
     status *auxStatus = posStatus;
-    celula *auxCelula;
+    celula *auxCelula = aberto->campos->pDados;
     
     system("cls");
     
     int pos = 1, col = 1, lin = 1;
+    char type;
     
-    gotoxy(col,lin);
+    gotoxy(col,lin); //1 - 1
     printf(". LIST");
     lin++;
-    gotoxy(col,lin);
+    gotoxy(col,lin); //1 - 2
     printf("Record# ");
-
-    // Exibir nomes dos campos
-    auxCampo = aberto->campos;
-    while (auxCampo != NULL) 
-    {
-    	col += 20;
-        gotoxy(col,lin);
-        printf("%s", auxCampo->fieldName);
-        auxCampo = auxCampo->prox;
-    }
     lin++;
-
-    // Exibir dados armazenados
-    auxStatus = posStatus;  // Reinicia ponteiro de status
-    while(auxStatus != NULL) 
+    
+    //exbindo o record apenas mudando de linha
+    while(auxCelula != NULL)
     {
-        if(stricmp(auxStatus->status,"true") == 0) 
+    	if(stricmp(auxStatus->status,"true") == 0)
+    	{
+	        gotoxy(col,lin); //1 - 3 em diante
+	        printf("%d", pos);
+	        pos++;
+	        lin++;
+		}
+		auxCelula = auxCelula->prox;
+	}
+    
+    while(auxCampo != NULL)
+    {
+    	celula *auxCelula = auxCampo->pDados;
+    	col += 20; 
+    	lin = 2;
+        gotoxy(col,lin); //21 - 2
+        printf("%s", auxCampo->fieldName);
+            
+        while(auxCelula != NULL)
         {
-            col = 1;
-            gotoxy(col, lin);
-            printf("%d", pos);
-
-            auxCampo = aberto->campos;
-            while (auxCampo != NULL) 
+            if(stricmp(auxStatus->status,"true") == 0)
             {
-            	col += 20;
-                if(auxCampo != NULL) 
-                    printUnion(auxCampo, col, lin);
-				
-				auxCampo->pAtual = auxCampo->pAtual->prox;
-                auxCampo = auxCampo->prox;
-            }
-
-            lin++;
-            pos++;
-        }
-        auxStatus = auxStatus->prox;
-    }
-
-    //voltando o pAtual para o inicio da lista assim como pDados
-    auxCampo = aberto->campos;
-    while (auxCampo != NULL) 
-    {
-        auxCampo->pAtual = auxCampo->pDados; 
-        auxCampo = auxCampo->prox;
-    }
+            	lin++;
+            	type = auxCampo->type;
+            	printUnion(auxCelula, type, col, lin);
+			}
+			auxCelula = auxCelula->prox;
+		}
+		auxCampo = auxCampo->prox;
+	}
 }
 
 void localeFor(arquivo *aberto, char *campo, void *busca) 
@@ -694,12 +651,16 @@ arquivo *buscaStatusAtivo(arquivo *auxArq, int &pos)
 
 void display(arquivo *auxAberto)
 {
-	campo *auxCampo = auxAberto->campos;
+	campo *auxCampo = auxAberto->campos;  //ok
+	campo *auxAtualCampo = auxAberto->campos; //ok
+	celula *auxCelula = auxAberto->campos->pAtual; //ok
+	
 	arquivo *auxArq = auxAberto;
 	
 	system("cls");
     
     int pos = 1, col = 1, lin = 1;
+    char type;
     
     gotoxy(col,lin);
     printf(". DISPLAY");
@@ -716,31 +677,95 @@ void display(arquivo *auxAberto)
         auxCampo = auxCampo->prox;
     }
     lin++;
+    
     //resetando o auxCampo
     auxCampo = auxAberto->campos;
-
-	auxArq = buscaStatusAtivo(auxArq,pos);
-	if(auxArq != NULL) //achou um registro com status true
-	{
-		status *auxStatus = auxArq->status;
 		
-		col = 1;
-        gotoxy(col, lin);
-        printf("%d", pos);
+	col = 1;
+		
+	//procurar a posição que o atual está para saber o valor
+	while(auxAtualCampo->pDados != auxCampo->pAtual)
+	{
+		auxAtualCampo->pDados = auxAtualCampo->pDados->prox;
+		pos++;
+	}
+		
+    gotoxy(col, lin);
+    printf("%d", pos);
 
-        auxCampo = auxArq->campos;
-        while(auxCampo != NULL) 
+    auxCampo = auxArq->campos;
+    while(auxCampo != NULL) 
+    {
+        col += 20;
+		auxCelula = auxCampo->pAtual;
+        type = auxCampo->type;
+
+        if(auxCelula != NULL)
+            printUnion(auxCelula, type, col, lin);
+        auxCampo = auxCampo->prox;
+    }
+    //voltandos os ponteiros para origem
+    auxCampo = auxArq->campos;
+}
+
+void Goto(arquivo *auxAberto, int pos)
+{
+    campo *auxCampo = auxAberto->campos;
+    status *auxStatus = auxAberto->status;
+
+    // Sempre voltar pAtual para o início (pDados sempre aponta para a cabeça)
+    while (auxCampo != NULL)
+    {
+        auxCampo->pAtual = auxCampo->pDados;
+        auxCampo = auxCampo->prox;
+    }
+    auxCampo = auxAberto->campos; // Resetando auxCampo
+    auxStatus = auxAberto->status; // Voltando status para o início
+
+    int cont = 1;
+
+    // Avançar até a posição desejada
+    while (cont < pos && auxStatus != NULL)
+    {
+        auxStatus = auxStatus->prox;
+        auxCampo = auxAberto->campos;
+
+        while (auxCampo != NULL)
         {
-            col += 20;
-
-            if(auxCampo != NULL) 
-                printUnion(auxCampo, col, lin);
-                
+            auxCampo->pAtual = auxCampo->pAtual->prox;
             auxCampo = auxCampo->prox;
         }
-	}
-	else
-		printf("\nNao achou um registro ativo!\n");
+        cont++;
+    }
+
+    // Se o status for "false", continuar avançando até encontrar um "true"
+    while (stricmp(auxStatus->status, "true") != 0)
+    {
+        auxStatus = auxStatus->prox;
+        auxCampo = auxAberto->campos;
+
+        while (auxCampo != NULL)
+        {
+            auxCampo->pAtual = auxCampo->pAtual->prox;
+            auxCampo = auxCampo->prox;
+        }
+    }
+}
+
+
+void Delete(arquivo *auxAberto)
+{
+//	//deixando o registro inativo com a exclusao logica
+//	strcpy(auxAberto->status->status,"false");
+//	
+////	PRA MIM NÃO TEM A NECESSIDADE DE MUDAR OS PONTEIROS
+////	PORQUE MESMO QUE A GENTE EXCLUIU NÃO PODE PERDER O ENDEREÇO DESSE REGISTRO
+////	PORQUE TALVEZ A PESSOA PEDE PARA REATIVAR ELE AI TEM QUE ESTAR EM ORDEM AINDA
+////	VAMOS PULAR ESSE RESGISTRO APENAS NA HORA DE EXIBIR
+//
+////	PARA EU FAZER O DELETE EU PRECISO DO GOTO2 PARA COLOCAR O PATUAL EM UM
+////	DETERMINADO REGISTRO E ATRAVES DELE EU DELETO ESSE REGISTRO QUE PATUAL APONTA
+////	ENTÃO TENHO QUE FAZER ESSE GOTO2 ANTES
 }
 
 int main(void)
@@ -749,6 +774,8 @@ int main(void)
 	char nomeDBF[50], data[11], hora[6];
 	
 	char comando[50],resto[50];
+	
+	int num=0;
 	
 	unidade *listUnid = NULL;
 	unidade *auxListUnid = NULL; //ponteiro para manipular o disco C: e D:
@@ -764,7 +791,7 @@ int main(void)
 		gets(comandoDbase);
 		LerPromt(comandoDbase,comando,resto);
 		//cada if pode tratar o *resto* como precisar
-		if(stricmp(comando, "Set Default To") == 0) //OK - TESTADO!!!
+		if(stricmp(comando, "Set Default To") == 0)
 		{
 			if(stricmp(resto,"c:") == 0 || stricmp(resto,"d:") == 0)
 	       		setDefaultTo(&auxListUnid, listUnid, resto);
@@ -925,6 +952,50 @@ int main(void)
 					if(aberto->campos->pAtual != NULL)
 					{
 						display(aberto);
+					}
+					else
+						printf("\nVoce ainda nao inseriu um registro!\n");
+				}
+				else
+					printf("\nVoce ainda nao abriu um arquivo!\n");
+			}
+			else
+				printf("\nVoce ainda nao escolheu uma unidade!\n");
+		}
+		else
+		if(stricmp(comando,"goto") == 0)
+		{
+			if(auxListUnid != NULL)
+			{
+				if(aberto != NULL)
+				{
+					if(aberto->campos->pAtual != NULL)
+					{
+						num = atoi(resto);
+						Goto(aberto,num);
+					}
+					else
+						printf("\nVoce ainda nao inseriu um registro!\n");
+				}
+				else
+					printf("\nVoce ainda nao abriu um arquivo!\n");
+			}
+			else
+				printf("\nVoce ainda nao escolheu uma unidade!\n");
+		}
+		else
+		if(stricmp(comando,"delete") == 0) 
+		{//para dar um delete eu tenho que ter usado o goto
+			if(auxListUnid != NULL)
+			{
+				if(aberto != NULL)
+				{
+					if(aberto->campos->pAtual != NULL)
+					{
+						if(stricmp(aberto->status->status,"true") == 0)
+							Delete(aberto);
+						else
+							printf("\nAtual ja excluido!\n");
 					}
 					else
 						printf("\nVoce ainda nao inseriu um registro!\n");

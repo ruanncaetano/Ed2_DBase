@@ -855,7 +855,6 @@ void Goto(arquivo *auxAberto, status **posStatus, int pos)
     }
 }
 
-
 void edit(arquivo *auxAberto)
 {
 	campo *auxCampo = auxAberto->campos;
@@ -965,6 +964,23 @@ void Delete(arquivo *auxAberto, status **posStatus)
     printf("Registro deletado!!!");
 }
 
+void deleteAll(arquivo *auxAberto)
+{
+	status *auxStatus = auxAberto->status; //apontando para o cabeça de status
+	
+	system("cls");
+	
+	int col=1, lin=1;
+	
+	while(auxStatus != NULL)
+	{
+		strcpy(auxStatus->status,"false");
+		auxStatus = auxStatus->prox;
+	}
+	
+	gotoxy(col,lin);
+	printf("Todos os registro foram deletados (logicamente)");
+}
 
 int main(void)
 { 
@@ -1209,6 +1225,26 @@ int main(void)
 					if(aberto->campos->pAtual != NULL)
 					{
 						Delete(aberto,&posStatus);
+					}
+					else
+						printf("\nVoce ainda nao inseriu um registro!\n");
+				}
+				else
+					printf("\nVoce ainda nao abriu um arquivo!\n");
+			}
+			else
+				printf("\nVoce ainda nao escolheu uma unidade!\n");
+		}
+		else
+		if(stricmp(comando,"delete all") == 0)
+		{
+			if(auxListUnid != NULL)
+			{
+				if(aberto != NULL)
+				{
+					if(aberto->campos->pAtual != NULL)
+					{
+						deleteAll(aberto);
 					}
 					else
 						printf("\nVoce ainda nao inseriu um registro!\n");

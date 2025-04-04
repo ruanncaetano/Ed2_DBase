@@ -793,67 +793,63 @@ void Goto(arquivo *auxAberto, status **posStatus, int pos)
     campo *auxCampo = auxAberto->campos;
     status *auxStatus = auxAberto->status;
 
-    int cont = 1, totalRegistro = 0;
+    int cont = 0, totalRegistro = 0;
 
     //quantidade de registros ativos
     while(auxStatus != NULL)
-	{
+    {
         if(stricmp(auxStatus->status, "true") == 0)
             totalRegistro++;
         auxStatus = auxStatus->prox;
     }
 
-    //verificando se a posição é válida
     if(pos > 0 && pos <= totalRegistro)
-	{
+    {
         auxStatus = auxAberto->status; // Resetando para o início
-        
+
         // Sempre voltar pAtual para o início
         while(auxCampo != NULL)
-		{
+        {
             auxCampo->pAtual = auxCampo->pDados;
             auxCampo = auxCampo->prox;
         }
 
-        auxCampo = auxAberto->campos;  //inicializando auxCampo
+        auxCampo = auxAberto->campos;
         *posStatus = auxStatus;
 
-        //avançando até a posição desejada
-        while(cont < pos && auxStatus != NULL)
-		{
-            auxStatus = auxStatus->prox;
-            auxCampo = auxAberto->campos;
+        // avançando até encontrar o registro ativo da posição desejada
+        cont = 0;
+        while(auxStatus != NULL && cont < pos)
+        {
+            if(stricmp(auxStatus->status, "true") == 0)
+                cont++;
 
-            //avaçando toda a estrutura da union para o próximo campo
-            while(auxCampo != NULL)
-			{
-                auxCampo->pAtual = auxCampo->pAtual->prox;
-                auxCampo = auxCampo->prox;
-            }
-            cont++;
-        }
+            if(cont < pos)
+            {
+                auxStatus = auxStatus->prox;
 
-        //se o status for "false", continuar avançando até encontrar um "true"
-        while(auxStatus != NULL && stricmp(auxStatus->status, "true") != 0)
-		{
-            auxStatus = auxStatus->prox;
-            auxCampo = auxAberto->campos;
-
-            // Avançando toda a estrutura da union para o próximo campo
-            while(auxCampo != NULL)
-			{
-                auxCampo->pAtual = auxCampo->pAtual->prox;
-                auxCampo = auxCampo->prox;
+                // Avançar todos os ponteiros pAtual dos campos
+                auxCampo = auxAberto->campos;
+                while(auxCampo != NULL)
+                {
+                    auxCampo->pAtual = auxCampo->pAtual->prox;
+                    auxCampo = auxCampo->prox;
+                }
             }
         }
-        *posStatus = auxStatus; //atualizando o ponteiro do status
+
+        // Caso encontrou a posição correta
+        *posStatus = auxStatus;
 
         if(*posStatus == NULL)
             printf("\nNenhum registro ativo encontrado!!!\n");
-    	else
-        	printf("\nQuantidade inválida!!!\n");
+    }
+    else
+    {
+        printf("\nQuantidade inválida!!!\n");
     }
 }
+
 
 void edit(arquivo *auxAberto)
 {
@@ -981,6 +977,75 @@ void deleteAll(arquivo *auxAberto)
 	gotoxy(col,lin);
 	printf("Todos os registro foram deletados (logicamente)");
 }
+
+//void pack(arquivo *auxAberto, status **posStatus) {
+//    int cont = 0;
+//    campo *atualCampo = auxAberto->campos; // Ponteiro para a cabeça da lista de campos
+//    celula *atualCelula, *auxCelula; // Ponteiros para manipular a lista de células
+//    status *atualStatus = auxAberto->status; // Ponteiro para a cabeça da lista de status
+//    status *auxStatus; // Ponteiro auxiliar para exclusão
+//
+//    while (atualStatus != NULL) {
+//        if (stricmp(atualStatus->status, "false") == 0) {
+//            if (cont == 0) { // Se for excluir o primeiro registro
+//                auxStatus = atualStatus;
+//                atualStatus = atualStatus->prox;
+//                auxAberto->status = atualStatus;
+//
+//                atualCampo = auxAberto->campos;
+//                while (atualCampo != NULL) {
+//                    atualCelula = atualCampo->pDados;
+//                    auxAberto->campos->pDados = atualCelula->prox;
+//                    auxCelula = atualCelula;
+//                    atualCelula = atualCelula->prox;
+//                    free(auxCelula);
+//                    atualCampo = atualCampo->prox;
+//                }
+//            } else { // Caso não seja o primeiro registro
+//                auxStatus = atualStatus;
+//                atualStatus = atualStatus->prox;
+//
+//                atualCampo = auxAberto->campos;
+//                while (atualCampo != NULL) {
+//                    auxCelula = atualCelula;
+//                    atualCelula = atualCelula->prox;
+//                    free(auxCelula);
+//                    atualCampo = atualCampo->prox;
+//                }
+//            }
+//            free(auxStatus);
+//        }
+//        
+//        atualCampo = auxAberto->campos;
+//        while (atualCampo != NULL) {
+//            auxCelula = atualCelula;
+//            atualCelula = atualCelula->prox;
+//            atualCampo = atualCampo->prox;
+//        }
+//        atualCampo = auxAberto->campos;
+//        atualStatus = atualStatus->prox;
+//        cont++;
+//    }
+//
+//    // Atualiza `posStatus` para apontar ao primeiro status "true"
+//    atualStatus = auxAberto->status;
+//    while (atualStatus != NULL && stricmp(atualStatus->status, "false") == 0) {
+//        atualStatus = atualStatus->prox;
+//        atualCampo = auxAberto->campos;
+//        while (atualCampo != NULL) {
+//            atualCampo->pAtual = atualCampo->pAtual->prox;
+//            atualCampo = atualCampo->prox;
+//        }
+//    }
+//
+//    if (atualStatus == NULL) {
+//        *posStatus = NULL;
+//        atualCampo->pAtual = NULL;
+//    } else {
+//        *posStatus = atualStatus; // Atualizando o ponteiro do status
+//    }
+//}
+
 
 int main(void)
 { 
@@ -1269,6 +1334,24 @@ int main(void)
 						else
 							printf("\nAtual ja excluido!\n");
 					}
+					else
+						printf("\nVoce ainda nao inseriu um registro!\n");
+				}
+				else
+					printf("\nVoce ainda nao abriu um arquivo!\n");
+			}
+			else
+				printf("\nVoce ainda nao escolheu uma unidade!\n");
+		}
+		else
+		if(stricmp(comando,"pack") == 0)
+		{
+			if(auxListUnid != NULL)
+			{
+				if(aberto != NULL)
+				{
+					if(aberto->campos->pAtual != NULL)
+						pack(aberto,&posStatus);
 					else
 						printf("\nVoce ainda nao inseriu um registro!\n");
 				}

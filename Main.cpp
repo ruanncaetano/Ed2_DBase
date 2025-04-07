@@ -3,7 +3,8 @@
 #include<string.h>
 #include<stdlib.h>
 #include<ctype.h>
-#include<time.h>
+
+#include "front.h"
 
 //Estrutura union do trabalho com os campos passado pelo professor
 union Dados
@@ -124,7 +125,7 @@ int validaType(campo *novoCampo, char type[20])
 }
 
 //função que cria um novo arquivo dentro de algum disco
-void create(unidade **auxListUnid, char nomeDBF[50]) //OK
+void create(unidade **auxListUnid, char nomeDBF[50],int posy) //OK
 {
 	char data[11], hora[6];
 	
@@ -164,31 +165,48 @@ void create(unidade **auxListUnid, char nomeDBF[50]) //OK
 //	PARA CRIAR OS CAMPOS DE DENTRO DO ARQUIVO CRIADO PELO USUARIO (AINDA FALTA ARRUMAR)
 //	para manipular a struct campo
 	char fieldName[50], type[20], op;
-	int width, flag;
+	int width, flag,i=1;
 	
-	printf("\n[ESC] - Sair");
+	printf("\n[ESC] - Sair | [ENTER] - Novo Campo");
 	op = getch();
+	limparExibicao();
+	gotoxy(12,posy);
+	printf("Fild Name");
+	gotoxy(38,posy);
+	printf("Type");
+	gotoxy(52,posy);
+	printf("White");
+	posy++;
+	gotoxy(12,posy);
+	printf("=============================================================");
 	while(op != 27)
 	{
 		campo *novoCampo = (campo*)malloc(sizeof(campo));
 		//pegandos os dados que o usuario digitou
-		printf("\nFieldName: ");
+		posy++;
+		gotoxy(2,posy);
+		printf("%d",i);
+		
+	//field name
+		gotoxy(12,posy);
 		fflush(stdin);
 		gets(fieldName);
-		
-		printf("\nType: ");
+	//type
+		gotoxy(38,posy);
 		fflush(stdin);
 		gets(type);
 		flag = validaType(novoCampo,type);
 		while(flag == 0) //obriga ele a digitar um tipe correto
 		{
-			printf("\nType invalido! Digite novamente...\n");
-			printf("\nType: ");
+			gotoxy(72,posy);
+			printf("Invalido!");
+			gotoxy(38,posy); // acho que vou fazer um funct que limpa a linha
 			fflush(stdin);
 			gets(type);
 			flag = validaType(novoCampo,type);
-		}	
-		printf("\nWidth: ");
+		}
+		// whidth	
+		gotoxy(52,posy);
 		scanf("%d",&width);
 		
 //		na função valida type eu já coloco o type dentro da caixinha
@@ -208,26 +226,39 @@ void create(unidade **auxListUnid, char nomeDBF[50]) //OK
 				
 			auxCampo->prox = novoCampo;
 		}
-		printf("\n[ESC] - Sair");
 		op = getch();
+		i++;
 	}
-	
-	printf("\nArquivo inserido com sucesso!!!\n");
+	gotoxy(2, posy+2);
+	printf("Arquivo inserido com sucesso!!!");
 }
 
 //função que exibe os arquivos da unidade
-void dir(unidade *auxListUnid) //OK
+void dir(unidade *auxListUnid,int posy) //OK
 {
+	int i=1;
 	arquivo *arqAux = auxListUnid->arqs;
-	printf("\nUNIDADE ATUAL: %s",auxListUnid->unid);
 	if(arqAux != NULL)
 	{
+		gotoxy(2,posy+i);
+		printf("Database Files");
+		gotoxy(32,posy+i);
+		printf("Records");
+		gotoxy(52,posy+i);
+		printf("Last Update");
+		gotoxy(72,posy+i);
+		printf("Size");
 		while(arqAux != NULL)
 		{
-			printf("\n*** EXIBINDO DADOS DOS ARQUIVOS ***");
-			printf("\nNome DBF: %s",arqAux->nomeDBF);
-			printf("\nData: %s",arqAux->date);
-			printf("\nHora: %s\n",arqAux->hora);
+			i++;
+			gotoxy(2,posy+i);
+			printf("%s",arqAux->nomeDBF);
+			gotoxy(32,posy+i);
+			printf("0");
+			gotoxy(52,posy+i);
+			printf("%s",arqAux->date);
+			gotoxy(72,posy+i);
+			printf("Tamanho");
 			arqAux = arqAux->prox;
 		}
 	}
@@ -671,7 +702,7 @@ void localeFor(arquivo *aberto, char *campo, void *busca)
                 switch (auxCampo->type)
 				 {
                     case 'C': // Character
-                        if (strcmp(auxCelula->dados.valorC, (char*)busca) == 0) 
+                        if (stricmp(auxCelula->dados.valorC, (char*)busca) == 0) 
 						{
                             printf("\nRecord = %d\n",record);
                         }
@@ -683,7 +714,7 @@ void localeFor(arquivo *aberto, char *campo, void *busca)
                         }
                         break;
                     case 'D': // Date
-                        if (strcmp(auxCelula->dados.valorD, (char*)busca) == 0) 
+                        if (stricmp(auxCelula->dados.valorD, (char*)busca) == 0) 
 						{
                             printf("\nRecord = %d\n",record);
                         }
@@ -695,7 +726,7 @@ void localeFor(arquivo *aberto, char *campo, void *busca)
                         }
                         break;
                     case 'M': // Memo
-                        if (strcmp(auxCelula->dados.valorM, (char*)busca) == 0) 
+                        if (stricmp(auxCelula->dados.valorM, (char*)busca) == 0) 
 						{
                             printf("\nRecord = %d\n",record);
                         }
@@ -1046,12 +1077,48 @@ void deleteAll(arquivo *auxAberto)
 //    }
 //}
 
+void zap(arquivo *aberto)
+{
+	Campo *aux;
+	celula *auxD,*exclui;
+	aux = aberto->campos;
+	printf("to aqui cheguei");
+	while( aux != NULL )
+	{
+		printf("to aqui fora");
+		// andar os campos
+		auxD = aux->pDados;
+		while(auxD!= NULL )
+		{
+			exclui = auxD;
+			auxD=auxD->prox;
+			free(exclui);
+			printf("to aqui dentro");	
+		}
+		auxD = NULL;
+		aux=aux->prox;
+	}
+	
+	// exclusão do status
+	status *auxS,*exc;
+	auxS=aberto->status;
+	
+	while(auxS != NULL)
+	{
+		exc=auxS;
+		auxS=auxS->prox;
+		free(exc);
+	}
+	aberto->status = NULL; // definindo que não tem nada nos campos
+	
+	
+}
 
 int main(void)
 { 
 	char comandoDbase[50], unid[3];
 	char nomeDBF[50], data[11], hora[6];
-	
+	char uni[10]="NULL";
 	char comando[50],resto[50];
 	
 	int num=0;
@@ -1065,7 +1132,14 @@ int main(void)
 	
 	do
 	{
-		printf("\nComandoDBase: ");
+		limparExibicao();
+		int poz_y;
+		poz_y = wherey();
+		char CommandLine[100] = "Linha de Comando";	
+		imprimirComando(CommandLine,poz_y);
+		desenharMenu(poz_y,CommandLine,uni);
+		
+		printf("\n> ");
 		fflush(stdin);
 		gets(comandoDbase);
 		LerPromt(comandoDbase,comando,resto);
@@ -1073,7 +1147,14 @@ int main(void)
 		if(stricmp(comando, "Set Default To") == 0)
 		{
 			if(stricmp(resto,"c:") == 0 || stricmp(resto,"d:") == 0)
-	       		setDefaultTo(&auxListUnid, listUnid, resto);
+	       	{
+				limparExibicao();
+				strcpy(uni,resto); // estou fazendo uma copia para que possa passar na barra de menu
+				setDefaultTo(&auxListUnid, listUnid, resto);
+				poz_y = wherey();
+				imprimirComando(comando,poz_y);
+				desenharMenu(poz_y,comando,uni);   
+			}
 	       	else
 	       		printf("\nUnidade nao existe!\n");
 	    }
@@ -1083,7 +1164,13 @@ int main(void)
 			if(auxListUnid != NULL)
 			{
 				if(strlen(resto) > 4) //estou comparando > 4 = ".dbf"
-					create(&auxListUnid,resto);
+				{
+					limparExibicao();
+					create(&auxListUnid,resto,poz_y);
+					poz_y = wherey();
+					imprimirComando(comando,poz_y);
+					desenharMenu(poz_y,comando,uni);
+				}
 				else
 					printf("\nVoce nao passou um nome!\n");
 			}	
@@ -1094,7 +1181,13 @@ int main(void)
 	    if(stricmp(comando, "dir") == 0)
 		{
 			if(auxListUnid != NULL)
-	    		dir(auxListUnid);
+			{
+				limparExibicao();
+				dir(auxListUnid,poz_y);
+				poz_y = wherey();
+				imprimirComando(comando,poz_y);
+				desenharMenu(poz_y,comando,uni);
+			}
 	    	else
 	    		printf("\nVoce ainda nao escolheu uma unidade!\n");
 	    }
@@ -1102,7 +1195,13 @@ int main(void)
 		if(stricmp(comando, "use") == 0)
 		{
 			if(auxListUnid != NULL)
+			{
+				limparExibicao();
 				use(&aberto,auxListUnid,resto);
+				poz_y = wherey();
+				imprimirComando(comando,poz_y);
+				desenharMenu(poz_y,comando,uni);	
+			}
 			else
 				printf("\nVoce ainda nao escolheu uma unidade!\n");
 	    }
@@ -1112,7 +1211,13 @@ int main(void)
 			if(auxListUnid != NULL)
 			{
 				if(aberto != NULL)
+				{
+					limparExibicao();
 					listStructure(aberto,auxListUnid);
+					poz_y = wherey();
+					imprimirComando(comando,poz_y);
+					desenharMenu(poz_y,comando,uni);
+				}
 				else
 					printf("\nVoce ainda nao abriu um arquivo!\n");
 			}
@@ -1122,6 +1227,7 @@ int main(void)
 		else
 		if(stricmp(comando, "quit") == 0)
 		{
+			limparExibicao();
 			printf("\nAmbiente DBase encerrado!\n");
 		}
 		else
@@ -1137,7 +1243,13 @@ int main(void)
 				if(aberto != NULL)
 				{
 					if(aberto->campos != NULL) //ele tem que ter criado os campos
+					{
+						limparExibicao();
 						append(aberto,&posStatus);
+						poz_y = wherey();
+						imprimirComando(comando,poz_y);
+						desenharMenu(poz_y,comando,uni);
+					}
 					else
 						printf("\nO arquivo nao tem campos criados!\n");
 				}
@@ -1155,7 +1267,13 @@ int main(void)
 				if(aberto != NULL)
 				{
 					if(aberto->campos->pDados != NULL)
-						list(aberto,aberto->status);
+					{
+							limparExibicao();
+						list(aberto,posStatus);
+						poz_y = wherey();
+						imprimirComando(comando,poz_y);
+						desenharMenu(poz_y,comando,uni);
+					}
 					else
 						printf("\nVoce ainda nao colocou dados no arquivo!\n");
 				}
@@ -1231,10 +1349,11 @@ int main(void)
 					i2++;
 				}
 				nome[j2] = '\0';
-				printf("Campo: |%s|\n", campo2);
-				printf("Valor: |%s|\n", nome);
-	
+				limparExibicao();
 				localeFor(aberto,campo2,nome);
+				poz_y = wherey();
+				imprimirComando(comando,poz_y);
+				desenharMenu(poz_y,comando,uni);
 			}
 			else
 				printf("\nVoce ainda nao escolheu uma unidade!\n");
@@ -1248,6 +1367,11 @@ int main(void)
 				{
 					if(aberto->campos->pAtual != NULL)
 					{
+						limparExibicao();
+						display(aberto,posStatus);
+						poz_y = wherey();
+						imprimirComando(comando,poz_y);
+						desenharMenu(poz_y,comando,uni);
 						display(aberto,posStatus);
 					}
 					else
@@ -1269,7 +1393,12 @@ int main(void)
 					if(aberto->campos->pAtual != NULL)
 					{
 						num = atoi(resto);
+						limparExibicao();
 						Goto(aberto,&posStatus,num);
+						poz_y = wherey();
+						imprimirComando(comando,poz_y);
+						desenharMenu(poz_y,comando,uni);
+						
 					}
 					else
 						printf("\nVoce ainda nao inseriu um registro!\n");
@@ -1289,7 +1418,12 @@ int main(void)
 				{
 					if(aberto->campos->pAtual != NULL)
 					{
+						limparExibicao();
 						Delete(aberto,&posStatus);
+						poz_y = wherey();
+						imprimirComando(comando,poz_y);
+						desenharMenu(poz_y,comando,uni);
+						
 					}
 					else
 						printf("\nVoce ainda nao inseriu um registro!\n");
@@ -1309,7 +1443,12 @@ int main(void)
 				{
 					if(aberto->campos->pAtual != NULL)
 					{
+						limparExibicao();
 						deleteAll(aberto);
+						poz_y = wherey();
+						imprimirComando(comando,poz_y);
+						desenharMenu(poz_y,comando,uni);
+						
 					}
 					else
 						printf("\nVoce ainda nao inseriu um registro!\n");
@@ -1330,7 +1469,14 @@ int main(void)
 					if(aberto->campos->pAtual != NULL)
 					{
 						if(stricmp(aberto->status->status,"true") == 0)
+						{
+							limparExibicao();
 							edit(aberto);
+							poz_y = wherey();
+							imprimirComando(comando,poz_y);
+							desenharMenu(poz_y,comando,uni);
+						}
+							
 						else
 							printf("\nAtual ja excluido!\n");
 					}
@@ -1351,9 +1497,36 @@ int main(void)
 				if(aberto != NULL)
 				{
 					if(aberto->campos->pAtual != NULL)
-						pack(aberto,&posStatus);
+					{
+						limparExibicao();
+						// aqui a chamada de função
+						poz_y = wherey();
+						imprimirComando(comando,poz_y);
+						desenharMenu(poz_y,comando,uni);
+					}
+						//pack(aberto,&posStatus);
 					else
 						printf("\nVoce ainda nao inseriu um registro!\n");
+				}
+				else
+					printf("\nVoce ainda nao abriu um arquivo!\n");
+			}
+			else
+				printf("\nVoce ainda nao escolheu uma unidade!\n");
+		}
+		else
+		if(stricmp(comando,"zap") == 0)
+		{
+			if(auxListUnid != NULL)
+			{
+				if(aberto != NULL)
+				{
+					limparExibicao();
+					zap(aberto);
+					poz_y = wherey();
+					imprimirComando(comando,poz_y);
+					desenharMenu(poz_y,comando,uni);
+					
 				}
 				else
 					printf("\nVoce ainda nao abriu um arquivo!\n");

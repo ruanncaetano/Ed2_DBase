@@ -680,67 +680,86 @@ void list(arquivo *aberto, status *posStatus)
 //    	printf("\nO campo não foi encontrado!");
 //}
 
-void localeFor(arquivo *aberto, char *campo, void *busca) 
+void locateFor(arquivo *aberto, char *campo, char *busca) 
 {
-	int record=1;
-    if (aberto == NULL) {
-        printf("\nNenhum arquivo aberto!\n");
-        return;
-    }
-	printf("Campo: |%s|\n", campo);
-	printf("Valor: |%s|\n", busca);
+	int record=1, col=1, lin=1;
+//	printf("Campo: |%s|\n", campo); para testar se estava dando certo
+//	printf("Valor: |%s|\n", busca);
 
     Campo *auxCampo = aberto-> campos;
-    while (auxCampo != NULL)
-	 {
-        if (strcmp(auxCampo->fieldName, campo) == 0)
-		 {
-            // Campo encontrado, agora verificar o valor
-            celula *auxCelula = auxCampo->pDados;
-            while (auxCelula != NULL) 
-			{
-                switch (auxCampo->type)
-				 {
-                    case 'C': // Character
-                        if (stricmp(auxCelula->dados.valorC, (char*)busca) == 0) 
-						{
-                            printf("\nRecord = %d\n",record);
-                        }
-                        break;
-                    case 'N': // Numeric
-                        if (auxCelula->dados.valorN == *(int*)busca) 
-						{
-                              printf("\nRecord = %d\n",record);
-                        }
-                        break;
-                    case 'D': // Date
-                        if (stricmp(auxCelula->dados.valorD, (char*)busca) == 0) 
-						{
-                            printf("\nRecord = %d\n",record);
-                        }
-                        break;
-                    case 'L': // Logical
-                        if (auxCelula->dados.valorL == *(char*)busca)
-						 {
-                              printf("\nRecord = %d\n",record);
-                        }
-                        break;
-                    case 'M': // Memo
-                        if (stricmp(auxCelula->dados.valorM, (char*)busca) == 0) 
-						{
-                            printf("\nRecord = %d\n",record);
-                        }
-                        break;
-                }
-                record++;
-                auxCelula = auxCelula->prox;
-            }
-            printf("\nValor nao encontrado no campo %s.\n", campo);
-            return;
-        }
-        auxCampo = auxCampo->prox;
-    }
-  
+    
+    //EU ACHO QUE ASSIM VAI FUNCIONAR
+    while(auxCampo != NULL && stricmp(auxCampo->fieldName,campo) != 0)
+    	auxCampo = auxCampo->prox;
+    	
+    if(auxCampo == NULL)
+    {
+    	gotoxy(col,lin);
+    	printf("Campo nao encontrado!");
+	}	
+    else
+    {
+    	//agora eu tenho que buscar o registro
+    	celula *auxCelula = auxCampo->pDados;
+    	if(auxCampo->type == 'N')
+    	{
+    		float num = atof(busca);
+    		while(auxCelula != NULL && auxCelula->dados.valorN != num)
+    		{
+    			auxCelula = auxCelula->prox;
+    			record++;
+			}	
+		}
+		else
+		if(auxCampo->type == 'L')
+		{
+			char caracter = busca[0];
+			while(auxCelula != NULL && auxCelula->dados.valorL != caracter)
+    		{
+    			auxCelula = auxCelula->prox;
+    			record++;
+			}
+		}
+		else
+		if(auxCampo->type == 'D')
+		{
+			while(auxCelula != NULL && stricmp(auxCelula->dados.valorD,busca) != 0)
+    		{
+    			auxCelula = auxCelula->prox;
+    			record++;
+			}
+		}
+		else
+		if(auxCampo->type == 'M')
+		{
+			while(auxCelula != NULL && stricmp(auxCelula->dados.valorM,busca) != 0)
+    		{
+    			auxCelula = auxCelula->prox;
+    			record++;
+			}
+		}
+		else
+		if(auxCampo->type == 'C')
+    	{
+			while(auxCelula != NULL && stricmp(auxCelula->dados.valorC,busca) != 0)
+    		{
+    			auxCelula = auxCelula->prox;
+    			record++;
+			}
+		}
+		
+		//verificando se achou o registro
+		if(auxCelula == NULL)
+		{
+			gotoxy(col,lin);
+			printf("O resgistro nao foi encontrado!");
+		}
+		else
+		{
+			gotoxy(col,lin);
+			printf("Record =       %d",record);
+		}
+	}
 }
 
 arquivo *buscaStatusAtivo(arquivo *auxArq, int &pos)
@@ -874,8 +893,6 @@ void Goto(arquivo *auxAberto, status **posStatus, int pos)
     }
 }
 
-
-
 void edit(arquivo *auxAberto)
 {
 	campo *auxCampo = auxAberto->campos;
@@ -969,8 +986,6 @@ void Delete(arquivo *auxAberto, status **posStatus)
     printf("Registro deletado!!!");
 }
 
-
-
 void deleteAll(arquivo *auxAberto)
 {
 	status *auxStatus = auxAberto->status; //apontando para o cabeça de status
@@ -1062,13 +1077,6 @@ void recall(arquivo *aberto, status *posStatus)
 	int col = 1, lin = 1;
 
     system("cls");
-
-//    if(posStatus == NULL)
-//    {
-//        gotoxy(col, lin);
-//        printf("Nenhum registro selecionado para recall.");
-//        return;
-//    }
 
     if(stricmp(posStatus->status, "false") == 0)
     {
@@ -1329,21 +1337,17 @@ int main(void)
 				}
 				copia[j]='\0';
 				
-				
-				//////////
-				
 				char campo2[50]={0},nome[50]={0};
-				int i2=0,j2=0;
+				int i2=0,j2=0;			
 				
-				
-				// serapra o campo de busca
+				//serapra o campo de busca
 				while(copia[i2] != ' ' && copia[i2] != '\0')
 				{
 					campo2[i2]=copia[i2];
 					i2++;
 				}
 				campo2[i2] = '\0'; 
-				// pega o resto de tudo, que é a informação que quer buscar
+				//pega o resto de tudo, que é a informação que quer buscar
 				while(copia[i2] != '\0')
 				{
 					if(copia[i2] != ' ')
@@ -1356,7 +1360,7 @@ int main(void)
 				}
 				nome[j2] = '\0';
 				limparExibicao();
-				localeFor(aberto,campo2,nome);
+				locateFor(aberto,campo2,nome);
 				poz_y = wherey();
 				imprimirComando(comando,poz_y);
 				desenharMenu(poz_y,comando,uni);

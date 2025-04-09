@@ -659,81 +659,139 @@ void list(arquivo *aberto, status *posStatus)
     }
 }
 
+void listFor(arquivo *aberto, status *posStatus, char resto[50])
+{
+    campo *auxCampo = aberto->campos;
+    campo *atualCampo = aberto->campos;
+    campo *campoTemp = aberto->campos;
+    status *auxStatus = posStatus;
 
-// FALTA TERMINAR
-//void listFor(arquivo *auxAberto, status *posStatus, char resto[50])
-//{
-//	campo *auxCampo = auxAberto->campos;
-//	status *auxStatus = posStatus;
-//	
-//	char campo[50], registro[50];
-//    int i = 0, j = 0;
-//
-////	lendo os campos
-//    while(resto[i] != ' ' && resto[i] != '\0')
-//        campo[j++] = resto[i++];
-//    
-//    campo[j] = '\0';
-//
-////	pulando os espaços
-//    while(resto[i] == ' ')
-//        i++;
-//
-////	lendo o resgistro
-//    j = 0;
-//    while(resto[i] != '\0' && j < 49)
-//        registro[j++] = resto[i++];
-//
-//    registro[j] = '\0';
-//
-////	procurando o campo
-//    while(stricmp(auxCampo->fieldName,campo) != 0 && auxCampo != NULL)
-//    	auxCampo = auxCampo->prox
-//    	
-//    if(stricmp(auxCampo->fieldName,campo) != 0) //achou
-//    {
-//    	celula *auxCelula = auxCampo->pDados;
-//    	
-//    	switch(auxCampo->type)
-//    	{
-//    		case 'N':
-////    			se for um numero eu tenho que tranformar em int
-//    			int num = atoi(registro);
-//    			procurando o numero passado no resgitro, e se achar vai exibindo
-//				while(auxCelula->dados.valorN != num && auxCelula != NULL)
-//				{
-//					if(auxCelula == registro)
-//			        {
-////			            aqui eu vou exibir os registros
-//			        }
-//			        auxCelula = auxCelula->prox;
-//				}
-//		        
-//				break;
-//	        case 'L':
-//				
-//				break;
-//	        case 'C':
-//				
-//				break;
-//	        case 'D': 
-//				
-//				break;
-//	        case 'M': 
-//				
-//				break;
-//		}
-//    }
-//    else
-//    	printf("\nO campo não foi encontrado!");
-//}
+    char campo[50], registro[50];
+    int i = 0, j = 0, n, col = 1, lin = 1;
+    int cont, record = 1;
+    int encontrou;
 
+    //lendo o nome do campo
+    while(resto[i] != ' ' && resto[i] != '\0')
+        campo[j++] = resto[i++];
+    campo[j] = '\0';
+
+    //pulando espaços
+    while(resto[i] == ' ')
+        i++;
+
+    //lendo o valor do campo
+    j = 0;
+    while(resto[i] != '\0')
+        registro[j++] = resto[i++];
+    registro[j] = '\0';
+
+    //procurando o campo
+    while(auxCampo != NULL && stricmp(auxCampo->fieldName, campo) != 0)
+        auxCampo = auxCampo->prox;
+
+    if(auxCampo == NULL)
+    {
+        gotoxy(col, lin);
+        printf("O campo nao foi encontrado!");
+    }
+    else
+    {
+        gotoxy(col, lin);
+        printf(". LIST FOR %s = \"%s\"", campo, registro);
+        lin++;
+        gotoxy(col, lin);
+        col += 15;
+
+        while(atualCampo != NULL)
+        {
+            gotoxy(col, lin);
+            printf("%s", atualCampo->fieldName);
+            col += 15;
+            atualCampo = atualCampo->prox;
+        }
+        lin++;
+        col = 1;
+
+        celula *auxCelula = auxCampo->pDados;
+        status *statusAtual = posStatus;
+        record = 1;
+        while(auxCelula != NULL && statusAtual != NULL)
+        {
+            encontrou = 0;
+            if(auxCampo->type == 'C' || auxCampo->type == 'D' || auxCampo->type == 'M')
+            {
+                char *regAtual = NULL;
+                if(auxCampo->type == 'C')
+                    regAtual = auxCelula->dados.valorC;
+                else
+				if(auxCampo->type == 'D')
+                    regAtual = auxCelula->dados.valorD;
+                else
+				if(auxCampo->type == 'M')
+                    regAtual = auxCelula->dados.valorM;
+                    
+                i = 0;
+                while (regAtual[i] != '\0' && encontrou == 0)
+                {
+                    j = 0;
+                    while (regAtual[i + j] != '\0' && registro[j] != '\0' && tolower(regAtual[i + j]) == tolower(registro[j]))
+                        j++;
+
+                    if (registro[j] == '\0')
+                        encontrou = 1;
+                    else
+                        i++;
+                }
+            }
+            else
+			if(auxCampo->type == 'N')
+            {
+                float regBuscado = atof(registro);
+                if(auxCelula->dados.valorN == regBuscado)
+                    encontrou = 1;
+            }
+            else
+			if(auxCampo->type == 'L')
+            {
+                if(toupper(auxCelula->dados.valorL) == toupper(registro[0]))
+                    encontrou = 1;
+            }
+
+            if(encontrou == 1 && stricmp(statusAtual->status, "true") == 0)
+            {
+                campoTemp = aberto->campos;
+                gotoxy(col, lin);
+                printf("%d", record);
+                col += 15;
+
+                while(campoTemp != NULL)
+                {
+                    celula *cel = campoTemp->pDados;
+                    n = 1;
+                    while(cel != NULL && n < record)
+                    {
+                        cel = cel->prox;
+                        n++;
+                    }
+                    if(cel != NULL)
+                        printUnion(cel, campoTemp->type, col, lin);
+                    col += 15;
+                    campoTemp = campoTemp->prox;
+                }
+                lin++;
+                col = 1;
+            }	
+            auxCelula = auxCelula->prox;
+            statusAtual = statusAtual->prox;
+            record++;
+        }
+    }
+}
 
 void locateFor(arquivo *aberto, char *campo, char *busca) 
 {
 	int record=1, col=1, lin=1;
-//	printf("Campo: |%s|\n", campo); para testar se estava dando certo
-//	printf("Valor: |%s|\n", busca);
 
     Campo *auxCampo = aberto-> campos;
     
@@ -1341,7 +1399,7 @@ int main(void)
 				{
 					if(aberto->campos->pDados != NULL)
 					{
-							limparExibicao();
+						limparExibicao();
 						list(aberto,posStatus);
 						poz_y = wherey();
 						imprimirComando(comando,poz_y);
@@ -1356,24 +1414,30 @@ int main(void)
 			else
 				printf("\nVoce ainda nao escolheu uma unidade!\n");
 		}
-//		else
-//		if(stricmp(comando,"list for") == 0)
-//		{
-//			if(auxListUnid != NULL)
-//			{
-//				if(aberto != NULL)
-//				{
-//					if(aberto->campos->pDados != NULL)
-//						listFor(aberto,posStatus,resto);
-//					else
-//						printf("\nVoce ainda nao colocou dados no arquivo!\n");
-//				}
-//				else
-//					printf("\nVoce ainda nao abriu um arquivo!\n");
-//			}
-//			else
-//				printf("\nVoce ainda nao escolheu uma unidade!\n");
-//		}
+		else
+		if(stricmp(comando,"list for") == 0)
+		{
+			if(auxListUnid != NULL)
+			{
+				if(aberto != NULL)
+				{
+					if(aberto->campos->pDados != NULL)
+					{
+						limparExibicao();
+						listFor(aberto,posStatus,resto);
+						poz_y = wherey();
+						imprimirComando(comando,poz_y);
+						desenharMenu(poz_y,comando,uni);
+					}
+					else
+						printf("\nVoce ainda nao colocou dados no arquivo!\n");
+				}
+				else
+					printf("\nVoce ainda nao abriu um arquivo!\n");
+			}
+			else
+				printf("\nVoce ainda nao escolheu uma unidade!\n");
+		}
 		else
 		if(stricmp(comando,"locate for") == 0)
 		{

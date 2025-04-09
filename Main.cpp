@@ -146,7 +146,7 @@ void create(unidade **auxListUnid, char nomeDBF[50],int posy) //OK
 	novoArq->campos = NULL;
 	novoArq->prox = NULL;
 
-	//prints teste
+
 	if((*auxListUnid)->arqs == NULL) //se caso ainda não tiver nenhum arquivo
 	{
 		(*auxListUnid)->arqs = novoArq;
@@ -161,9 +161,8 @@ void create(unidade **auxListUnid, char nomeDBF[50],int posy) //OK
 		novoArq->ant = atualArq;
 		atualArq->prox = novoArq;
 	}
-	
-//	PARA CRIAR OS CAMPOS DE DENTRO DO ARQUIVO CRIADO PELO USUARIO (AINDA FALTA ARRUMAR)
-//	para manipular a struct campo
+
+
 	char fieldName[50], type[20], op;
 	int width, flag,i=1;
 	
@@ -267,7 +266,7 @@ void dir(unidade *auxListUnid,int posy) //OK
 	
 }
 
-//função que busca o arquivo e faz o ponteiro aberto apontar para ele
+//funcao que busca o arquivo e faz o ponteiro aberto apontar para ele
 void use(arquivo **aberto, unidade *auxListUnid, char nomeDBF[50]) //OK
 {
 
@@ -393,7 +392,7 @@ int buscaFuncao(char *comando)
     for (int i = 0; i < tamanho; i++)
     {
         if (stricmp(comando, comandos[i]) == 0)
-            return i; // Retorna o índice do comando encontrado
+            return i; //retorna o indice do comando
     }
     return -1;
 }
@@ -615,7 +614,6 @@ void list(arquivo *aberto, status *posStatus)
     printf("Record# ");
     lin++;
 
-    // --- Primeira coluna: numeração dos registros ativos ---
     celula *auxCelula = aberto->campos->pDados;
     status *auxStatus = posStatus;
 
@@ -632,12 +630,12 @@ void list(arquivo *aberto, status *posStatus)
         auxStatus = auxStatus->prox;
     }
 
-    // --- Colunas com os campos e valores ativos ---
+
     auxCampo = aberto->campos;
     while(auxCampo != NULL)
     {
         celula *auxCelula = auxCampo->pDados;
-        auxStatus = posStatus;  // Resetar status pro início de novo
+        auxStatus = posStatus;  //status pro início de novo
         col += 20;
         lin = 2;
         gotoxy(col, lin);
@@ -900,7 +898,7 @@ void display(arquivo *auxAberto, status *posStatus)
     gotoxy(col, lin);
     printf("Record# ");
 
-// 	Exibir nomes dos campos
+		//Exibir nomes dos campos
     campo *tempCampo = auxAberto->campos;
     while(tempCampo != NULL)
     {
@@ -913,7 +911,7 @@ void display(arquivo *auxAberto, status *posStatus)
 
 	if(auxStatus != NULL && stricmp(auxStatus->status,"true") == 0)
 	{
-		// obter a posição baseada em um dos campos
+
 	    campo *baseCampo = auxAberto->campos;
 	    celula *aux = baseCampo->pDados;
 	    pos = 1;
@@ -923,7 +921,7 @@ void display(arquivo *auxAberto, status *posStatus)
 	        pos++;
 	    }
 	
-//		mostrar número do registro
+			//mostrar número do registro
 	    col = 1;
 	    gotoxy(col, lin);
 	    printf("%d", pos);
@@ -951,7 +949,7 @@ void Goto(arquivo *auxAberto, status **posStatus, int pos)
 
     int cont = 0, totalRegistro = 0, col=1, lin=1;
 
-    // Contando a quantidade total de registros (ativos ou inativos)
+    //Contando a qntd total de reg - On ou off
     while(auxStatus != NULL)
     {
         totalRegistro++;
@@ -960,9 +958,9 @@ void Goto(arquivo *auxAberto, status **posStatus, int pos)
 
     if(pos > 0 && pos <= totalRegistro)
     {
-        auxStatus = auxAberto->status; // Resetando para o início
+        auxStatus = auxAberto->status; 
 
-        // Resetar todos os ponteiros pAtual dos campos
+        
         auxCampo = auxAberto->campos;
         while(auxCampo != NULL)
         {
@@ -972,11 +970,11 @@ void Goto(arquivo *auxAberto, status **posStatus, int pos)
 
         auxCampo = auxAberto->campos;
         *posStatus = auxStatus;
-        cont = 1; // primeira posição já é a 1
+        cont = 1; 
 
         while(cont < pos && auxStatus != NULL)
         {
-            // Avança todos os ponteiros pAtual dos campos
+            
             auxCampo = auxAberto->campos;
             while(auxCampo != NULL)
             {
@@ -1084,10 +1082,10 @@ void Delete(arquivo *auxAberto, status **posStatus)
 
     system("cls");
 
-    // Marca o registro atual como excluído logicamente
+    //Marca o reg atual excluído logi
     strcpy((*posStatus)->status, "false");
 
-    // Reinicia os ponteiros pAtual dos campos para o início (pDados)
+  
     campo *auxCampo = auxAberto->campos;
     while (auxCampo != NULL)
     {
@@ -1095,7 +1093,7 @@ void Delete(arquivo *auxAberto, status **posStatus)
         auxCampo = auxCampo->prox;
     }
 
-    // Reinicia o ponteiro de status para o primeiro da lista
+    
     *posStatus = auxAberto->status;
 
     gotoxy(col, lin);
@@ -1179,7 +1177,6 @@ void pack(arquivo *auxAberto, status **posStatus)
 
 	gotoxy(col,lin);
 	printf("Pack realizado com sucesso");
-	//colocando os ponteiros no primeiro registro
 	atualCampo = auxAberto->campos;
 	if(atualCampo->pDados != NULL)
 	{
@@ -1267,7 +1264,7 @@ void zap(arquivo *aberto)
 		auxS=auxS->prox;
 		free(exc);
 	}
-	aberto->status = NULL; // definindo que não tem nada nos campos
+	aberto->status = NULL; //definindo que nao tem nada nos campos
 }
 
 int verificaDBF(char nomeDBF[50])
@@ -1772,207 +1769,3 @@ int main(void)
 		getch();
 	}while(stricmp(comando,"quit") != 0);
 }
-
-//essa função le o prompt com vetor e não ponteiro
-//void LerPromt(char leitura[50], char *comando, char *resto)
-//{
-//    char comando_composto[100] = "";
-//    char copia[100];
-//    char inicio[20] = "";
-//    char pos[20] = "";
-//    
-//    strcpy(copia, leitura);
-//
-//    int i = 0, j = 0;
-//
-//    // Ignora espaços no início
-//    while (copia[i] == ' ')
-//        i++;
-//
-//    // Copia a parte útil para 'inicio'
-//    while (copia[i] != '\0' && j < 19)
-//    {
-//        inicio[j++] = copia[i++];
-//    }
-//    inicio[j] = '\0';
-//
-//    int posComando = -1;
-//    char temp[100] = "";
-//    int lenInicio = strlen(inicio);
-//    int indice = 0;
-//    int terminou = 0;
-//
-//    while (indice < lenInicio && !terminou)
-//    {
-//        // Pega uma palavra
-//        char palavra[50] = "";
-//        int k = 0;
-//
-//        // Ignora espaços
-//        while (inicio[indice] == ' ' && indice < lenInicio)
-//            indice++;
-//
-//        // Copia a palavra até espaço ou fim
-//        while (inicio[indice] != ' ' && inicio[indice] != '\0' && k < 49)
-//        {
-//            palavra[k++] = inicio[indice++];
-//        }
-//        palavra[k] = '\0';
-//
-//        // Guarda o estado anterior
-//        char tempAnterior[100];
-//        strcpy(tempAnterior, temp);
-//
-//        if (strlen(temp) > 0)
-//            strcat(temp, " ");
-//
-//        strcat(temp, palavra);
-//
-//        if (buscaFuncao(temp) != -1)
-//        {
-//            strcpy(comando_composto, temp);
-//            posComando = 1;
-//        }
-//        else if (posComando != -1)
-//        {
-//            strcpy(temp, tempAnterior); // volta ao último comando válido
-//            terminou = 1; // encerra o loop sem usar break
-//        }
-//    }
-//
-//    if (posComando == -1)
-//    {
-//        strcpy(comando, "");
-//        strcpy(resto, leitura);
-//    }
-//    else
-//    {
-//        strcpy(comando, comando_composto);
-//        int len = strlen(comando_composto);
-//        int r = 0, c = len;
-//
-//        // Pula espaços
-//        while (leitura[c] == ' ')
-//            c++;
-//
-//        while (leitura[c] != '\0' && r < 19)
-//        {
-//            pos[r++] = leitura[c++];
-//        }
-//        pos[r] = '\0';
-//
-//        strcpy(resto, pos);
-//    }
-//}
-
-
-//Função que o Gui fez para buscar se um comando é valido
-//int buscaFuncao(char *comando, char *resto)
-//{
-//	char comandos[][20] = {
-//		"set default to", "create", "dir", "quit", "use", "list", "list structure",
-//        "list for","append",  "clear", "locate for", "goto", "display", 
-//        "edit", "delete", "delete all" "recall", "set deleted", "pack", "zap"
-//	};
-//	
-//	int tamanho = sizeof(comandos) / sizeof(comandos[0]);
-//	for(int i=0; i<tamanho; i++)
-//	{
-//		if(stricmp(comando,comandos[i]) == 0)
-//			return 1;
-//	}
-//	return 0;
-//}
-
-// Função para ler e tokenizar a string
-//void LerPromt(char leitura[50], char *comando, char *resto) RUAN
-//{
-//    // Variável para armazenar o comando composto
-//	char comando_composto[100] = "";
-//	
-//	// Aloca memória para a cópia da string
-//    char *copia = (char *)malloc((strlen(leitura) + 1) * sizeof(char)); // não sei se isso esta certo
-//    if(copia == NULL)
-//	{
-//        printf("\nErro ao alocar memoria.\n");
-//    }
-//	else
-//	{
-//	    // Copia a string original para a cópia
-//	    strcpy(copia, leitura);
-//	
-//	    // Ignorar espaços no começo
-//	    char *inicio = copia;
-//	    while(*inicio == ' ')
-//		{
-//	        inicio++;
-//	    }
-//		char *fim_palavra = inicio;
-//	    // Pega a primeira palavra
-//	    while(*fim_palavra != ' ' && *fim_palavra != '\0')
-//		{
-//	        fim_palavra++;
-//	    }
-//	
-//	    // Separa a primeira palavra
-//	    if(*fim_palavra == ' ')
-//		{
-//	        *fim_palavra = '\0'; // Termina a primeira palavra
-//	        strcat(comando_composto, inicio);
-//	        inicio = fim_palavra + 1;
-//	
-//	        // Remove espaços iniciais do restante
-//	        while(*inicio == ' ')
-//			{
-//	            inicio++;
-//	        }
-//	    }
-//		else
-//		{
-//	        strcat(comando_composto, inicio);
-//	        inicio = fim_palavra; // Fim da string
-//	    }
-//	
-//	    // Verifica se a primeira palavra é um comando válido
-//	    int buscaSeE = buscaFuncao(comando_composto, inicio);
-//	
-//	    // Loop para concatenar mais palavras enquanto a busca retornar 0
-//	    while(buscaSeE == 0 && *inicio != '\0')
-//		{
-//	        // Pega a próxima palavra
-//	        fim_palavra = inicio;
-//	        while(*fim_palavra != ' ' && *fim_palavra != '\0')
-//			{
-//	            fim_palavra++;
-//	        }
-//	
-//	        // Concatena a próxima palavra ao comando composto
-//	        if(*fim_palavra == ' ')
-//			{
-//	            *fim_palavra = '\0'; // Termina a próxima palavra
-//	            strcat(comando_composto, " ");
-//	            strcat(comando_composto, inicio);
-//	            inicio = fim_palavra + 1;
-//	
-//	            // Remove espaços iniciais do restante
-//	            while(*inicio == ' ')
-//				{
-//	                inicio++;
-//	            }
-//	        }
-//			else
-//			{
-//	            strcat(comando_composto, " ");
-//	            strcat(comando_composto, inicio);
-//	            inicio = fim_palavra; // Fim da string
-//	        }
-//	
-//	        // Verifica se o comando composto é válido
-//	        buscaSeE = buscaFuncao(comando_composto, inicio);
-//	    }
-//		strcpy(comando,comando_composto);
-//		strcpy(resto,inicio);
-//	    // Libera a memória alocada para a cópia
-//	    free(copia);
-//	}
-//}

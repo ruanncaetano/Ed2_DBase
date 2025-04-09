@@ -386,7 +386,7 @@ int buscaFuncao(char *comando)
     char comandos[][20] = {
         "set default to", "create", "dir", "quit", "use", "list", "list structure",
         "list for", "append", "clear", "locate for", "goto", "display",
-        "edit", "delete", "delete all", "recall", "set deleted", "pack", "zap"
+        "edit", "delete", "delete all", "recall", "set deleted", "pack", "zap", "recall all"
     };
 
     int tamanho = sizeof(comandos) / sizeof(comandos[0]);
@@ -1210,6 +1210,31 @@ void recall(arquivo *aberto, status *posStatus)
     }
 }
 
+void recallAll(status *listaStatus)
+{
+    int col = 1, lin = 1;
+    int cont = 0;
+
+    system("cls");
+
+    while(listaStatus != NULL)
+    {
+        if(stricmp(listaStatus->status, "false") == 0)
+        {
+            strcpy(listaStatus->status, "true");
+            cont++;
+        }
+        listaStatus = listaStatus->prox;
+    }
+
+    gotoxy(col, lin);
+    if(cont > 0)
+        printf("Todos os registros foram reativados com sucesso! Total reativado: %d",cont);
+    else
+        printf("Nenhum registro estava inativo!");
+}
+
+
 void zap(arquivo *aberto)
 {
 	Campo *aux;
@@ -1244,6 +1269,26 @@ void zap(arquivo *aberto)
 	}
 	aberto->status = NULL; // definindo que não tem nada nos campos
 }
+
+int verificaDBF(char nomeDBF[50])
+{
+    int i = 0, j = 0;
+    char padraoNome[5] = ".DBF", subString[20];
+
+    while(nomeDBF[i] != '\0' && nomeDBF[i] != '.')
+        i++;
+
+    if(nomeDBF[i] == '\0')
+        return 0;
+
+    while(nomeDBF[i] != '\0')
+        subString[j++] = nomeDBF[i++];
+    subString[j] = '\0';
+
+    if(stricmp(padraoNome, subString) == 0)
+        return 1;
+}
+
 
 int main(void)
 { 
@@ -1296,11 +1341,17 @@ int main(void)
 			{
 				if(strlen(resto) > 4) //estou comparando > 4 = ".dbf"
 				{
-					limparExibicao();
-					create(&auxListUnid,resto,poz_y);
-					poz_y = wherey();
-					imprimirComando(comando,poz_y);
-					desenharMenu(poz_y,comando,uni);
+					if(verificaDBF(resto) == 1)
+					{
+						limparExibicao();
+						create(&auxListUnid,resto,poz_y);
+						poz_y = wherey();
+						imprimirComando(comando,poz_y);
+						desenharMenu(poz_y,comando,uni);
+					}
+					else
+						printf("\nNome para o arquivo invalido!");
+					
 				}
 				else
 					printf("\nVoce nao passou um nome!\n");
@@ -1607,6 +1658,30 @@ int main(void)
 						imprimirComando(comando,poz_y);
 						desenharMenu(poz_y,comando,uni);
 						
+					}
+					else
+						printf("\nVoce ainda nao inseriu um registro!\n");
+				}
+				else
+					printf("\nVoce ainda nao abriu um arquivo!\n");
+			}
+			else
+				printf("\nVoce ainda nao escolheu uma unidade!\n");
+		}
+		else
+		if(stricmp(comando,"recall all") == 0)
+		{
+			if(auxListUnid != NULL)
+			{
+				if(aberto != NULL)
+				{
+					if(aberto->campos->pAtual != NULL)
+					{
+						limparExibicao();
+						recallAll(aberto->status);
+						poz_y = wherey();
+						imprimirComando(comando,poz_y);
+						desenharMenu(poz_y,comando,uni);	
 					}
 					else
 						printf("\nVoce ainda nao inseriu um registro!\n");

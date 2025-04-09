@@ -175,7 +175,7 @@ void create(unidade **auxListUnid, char nomeDBF[50],int posy) //OK
 	gotoxy(38,posy);
 	printf("Type");
 	gotoxy(52,posy);
-	printf("White");
+	printf("Width");
 	posy++;
 	gotoxy(12,posy);
 	printf("=============================================================");
@@ -571,9 +571,9 @@ void list(arquivo *aberto, status *posStatus)
     celula *auxCelula = aberto->campos->pDados;
     status *auxStatus = posStatus;
 
-    while (auxCelula != NULL && auxStatus != NULL)
+    while(auxCelula != NULL && auxStatus != NULL)
     {
-        if (stricmp(auxStatus->status, "true") == 0)
+        if(stricmp(auxStatus->status, "true") == 0)
         {
             gotoxy(col, lin); // 1 - 3 em diante
             printf("%d", pos);
@@ -586,7 +586,7 @@ void list(arquivo *aberto, status *posStatus)
 
     // --- Colunas com os campos e valores ativos ---
     auxCampo = aberto->campos;
-    while (auxCampo != NULL)
+    while(auxCampo != NULL)
     {
         celula *auxCelula = auxCampo->pDados;
         auxStatus = posStatus;  // Resetar status pro início de novo
@@ -595,9 +595,9 @@ void list(arquivo *aberto, status *posStatus)
         gotoxy(col, lin);
         printf("%s", auxCampo->fieldName);
 
-        while (auxCelula != NULL && auxStatus != NULL)
+        while(auxCelula != NULL && auxStatus != NULL)
         {
-            if (stricmp(auxStatus->status, "true") == 0)
+            if(stricmp(auxStatus->status, "true") == 0)
             {
                 lin++;
                 type = auxCampo->type;
@@ -826,11 +826,10 @@ void Goto(arquivo *auxAberto, status **posStatus, int pos)
 
     int cont = 0, totalRegistro = 0;
 
-    //quantidade de registros ativos
+    // Contando a quantidade total de registros (ativos ou inativos)
     while(auxStatus != NULL)
     {
-        if(stricmp(auxStatus->status, "true") == 0)
-            totalRegistro++;
+        totalRegistro++;
         auxStatus = auxStatus->prox;
     }
 
@@ -838,7 +837,8 @@ void Goto(arquivo *auxAberto, status **posStatus, int pos)
     {
         auxStatus = auxAberto->status; // Resetando para o início
 
-        // Sempre voltar pAtual para o início
+        // Resetar todos os ponteiros pAtual dos campos
+        auxCampo = auxAberto->campos;
         while(auxCampo != NULL)
         {
             auxCampo->pAtual = auxCampo->pDados;
@@ -847,39 +847,33 @@ void Goto(arquivo *auxAberto, status **posStatus, int pos)
 
         auxCampo = auxAberto->campos;
         *posStatus = auxStatus;
+        cont = 1; // primeira posição já é a 1
 
-        // avançando até encontrar o registro ativo da posição desejada
-        cont = 0;
-        while(auxStatus != NULL && cont < pos)
+        while(cont < pos && auxStatus != NULL)
         {
-            if(stricmp(auxStatus->status, "true") == 0)
-                cont++;
-
-            if(cont < pos)
+            // Avança todos os ponteiros pAtual dos campos
+            auxCampo = auxAberto->campos;
+            while(auxCampo != NULL)
             {
-                auxStatus = auxStatus->prox;
-
-                // Avançar todos os ponteiros pAtual dos campos
-                auxCampo = auxAberto->campos;
-                while(auxCampo != NULL)
-                {
-                    auxCampo->pAtual = auxCampo->pAtual->prox;
-                    auxCampo = auxCampo->prox;
-                }
+                auxCampo->pAtual = auxCampo->pAtual->prox;
+                auxCampo = auxCampo->prox;
             }
+
+            auxStatus = auxStatus->prox;
+            cont++;
         }
 
-        // Caso encontrou a posição correta
         *posStatus = auxStatus;
 
         if(*posStatus == NULL)
-            printf("\nNenhum registro ativo encontrado!!!\n");
+            printf("\nRegistro não encontrado!\n");
     }
     else
     {
-        printf("\nQuantidade inválida!!!\n");
+        printf("\nPosição inválida!\n");
     }
 }
+
 
 
 void edit(arquivo *auxAberto)
@@ -953,43 +947,29 @@ void edit(arquivo *auxAberto)
 
 void Delete(arquivo *auxAberto, status **posStatus)
 {
-	int col=1, lin=1;
-	
-	system("cls");
-	
+    int col = 1, lin = 1;
+
+    system("cls");
+
+    // Marca o registro atual como excluído logicamente
     strcpy((*posStatus)->status, "false");
 
-    //reiniciando ponteiros
-    status *auxStatus = auxAberto->status;
+    // Reinicia os ponteiros pAtual dos campos para o início (pDados)
     campo *auxCampo = auxAberto->campos;
-
-    //resetando todos os pAtual para o início (pDados)
-    while(auxCampo != NULL)
+    while (auxCampo != NULL)
     {
         auxCampo->pAtual = auxCampo->pDados;
         auxCampo = auxCampo->prox;
     }
 
-    auxStatus = auxAberto->status;
+    // Reinicia o ponteiro de status para o primeiro da lista
+    *posStatus = auxAberto->status;
 
-    while(auxStatus != NULL && stricmp(auxStatus->status, "true") != 0)
-    {
-        // Avançando todos os pAtual
-        auxCampo = auxAberto->campos;
-        while(auxCampo != NULL)
-        {
-            if(auxCampo->pAtual != NULL)
-                auxCampo->pAtual = auxCampo->pAtual->prox;
-            auxCampo = auxCampo->prox;
-        }
-        auxStatus = auxStatus->prox;
-    }
-
-    *posStatus = auxStatus;
-
-    gotoxy(col,lin);
+    gotoxy(col, lin);
     printf("Registro deletado!!!");
 }
+
+
 
 void deleteAll(arquivo *auxAberto)
 {
@@ -1076,6 +1056,32 @@ void deleteAll(arquivo *auxAberto)
 //        *posStatus = atualStatus; // Atualizando o ponteiro do status
 //    }
 //}
+
+void recall(arquivo *aberto, status *posStatus)
+{
+	int col = 1, lin = 1;
+
+    system("cls");
+
+//    if(posStatus == NULL)
+//    {
+//        gotoxy(col, lin);
+//        printf("Nenhum registro selecionado para recall.");
+//        return;
+//    }
+
+    if(stricmp(posStatus->status, "false") == 0)
+    {
+        strcpy(posStatus->status, "true");
+        gotoxy(col, lin);
+        printf("Registro recuperado com sucesso!");
+    }
+    else
+    {
+        gotoxy(col, lin);
+        printf("O registro já está ativo. Nenhuma ação necessária.");
+    }
+}
 
 void zap(arquivo *aberto)
 {
@@ -1445,6 +1451,31 @@ int main(void)
 					{
 						limparExibicao();
 						deleteAll(aberto);
+						poz_y = wherey();
+						imprimirComando(comando,poz_y);
+						desenharMenu(poz_y,comando,uni);
+						
+					}
+					else
+						printf("\nVoce ainda nao inseriu um registro!\n");
+				}
+				else
+					printf("\nVoce ainda nao abriu um arquivo!\n");
+			}
+			else
+				printf("\nVoce ainda nao escolheu uma unidade!\n");
+		}
+		else
+		if(stricmp(comando,"recall") == 0) 
+		{
+			if(auxListUnid != NULL)
+			{
+				if(aberto != NULL)
+				{
+					if(aberto->campos->pAtual != NULL)
+					{
+						limparExibicao();
+						recall(aberto,posStatus);
 						poz_y = wherey();
 						imprimirComando(comando,poz_y);
 						desenharMenu(poz_y,comando,uni);

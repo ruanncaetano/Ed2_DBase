@@ -286,47 +286,95 @@ void use(arquivo **aberto, unidade *auxListUnid, char nomeDBF[50]) //OK
 	
 }
 
-void listStructure(arquivo *aberto, unidade *auxListUnid)
+void listStructure(arquivo *aberto, unidade *auxListUnid,int posy)
 {
 	int cont=1, total=1;
 	arquivo *auxArq = aberto;
 	campo *auxCampo = aberto->campos;
-	printf("\n. LIST STRUCTURE");
-	printf("\nStructure for database\t: %s%s",auxListUnid->unid,auxArq->nomeDBF);
-	printf("\nNumber of data records\t: 0");
-	printf("\nDate of last update   \t: %s",auxArq->date);
+	gotoxy(2,posy);
+	printf(". LIST STRUCTURE");
+	posy++;
+	gotoxy(2,posy);
+	printf("Structure for database %s%s",auxListUnid->unid,auxArq->nomeDBF);
+	posy++;
+	gotoxy(2,posy);
+	printf("Number of data records 0");
+	posy++;
+	gotoxy(2,posy);
+	printf("Date of last update  %s",auxArq->date);
 	
 	if(aberto->campos != NULL)
 	{
+		posy++;
+		gotoxy(2,posy);
+		printf("Fild");
+		gotoxy(18,posy);
+		printf("Fild Name");
+		gotoxy(32,posy);
+		printf("Type");
+		gotoxy(52,posy);
+		printf("Width");
+		gotoxy(72,posy);
+		printf("Desc");
+		
+		
 		while(auxCampo != NULL)
 		{
-			printf("\nField: %d",cont);
-			printf("\nField name: %s",auxCampo->fieldName);
+			posy++;
+			gotoxy(2,posy);
+			printf("%d",cont);
+			gotoxy(18,posy);
+			printf("%s",auxCampo->fieldName);
 			
 			if(auxCampo->type == 'C')
-				printf("\nType: Character");
+			{
+				gotoxy(32,posy);
+				printf("Type: Character");
+			}
+				
 			else
 			if(auxCampo->type == 'N')
-				printf("\nType: Numeric");
+			{
+				gotoxy(32,posy);
+				printf("Type: Numeric");
+			}
+				
 			else
 			if(auxCampo->type == 'D')
-				printf("\nType: Date");
+			{
+				gotoxy(32,posy);
+				printf("Type: Date");
+			}
+				
 			else
 			if(auxCampo->type == 'L')
-				printf("\nType: Logical");
+			{
+				gotoxy(32,posy);
+				printf("Type: Logical");
+			}
+				
 			else
 			if(auxCampo->type == 'M')
+			{
+				gotoxy(32,posy);
 				printf("\nType: Memo");
-			
-			printf("\nWidth: %d",auxCampo->width);
-			printf("\nDec: %d\n",auxCampo->dec);
+			}
+				
+			gotoxy(52,posy);
+			printf("%d",auxCampo->width);
+			gotoxy(72,posy);
+			printf("%d\n",auxCampo->dec);
 			
 			total = total + auxCampo->width;
 			
 			auxCampo = auxCampo->prox;
 			cont++;
 		}
-		printf("\n** Total **: %d",total);
+		posy++;posy++;
+		gotoxy(2,posy);
+		printf("** Total **");
+		gotoxy(52,posy);
+		printf("%d",total);
 	}
 	else
 		printf("\nNao contem campos no arquivo!\n");
@@ -680,6 +728,7 @@ void list(arquivo *aberto, status *posStatus)
 //    	printf("\nO campo não foi encontrado!");
 //}
 
+
 void locateFor(arquivo *aberto, char *campo, char *busca) 
 {
 	int record=1, col=1, lin=1;
@@ -783,7 +832,6 @@ void display(arquivo *auxAberto, status *posStatus)
     celula *auxCelula;
     status *auxStatus = posStatus;
 
-    system("cls");
 
     int pos = 1, col = 1, lin = 1;
     char type;
@@ -843,7 +891,7 @@ void Goto(arquivo *auxAberto, status **posStatus, int pos)
     campo *auxCampo = auxAberto->campos;
     status *auxStatus = auxAberto->status;
 
-    int cont = 0, totalRegistro = 0;
+    int cont = 0, totalRegistro = 0, col=1, lin=1;
 
     // Contando a quantidade total de registros (ativos ou inativos)
     while(auxStatus != NULL)
@@ -884,12 +932,22 @@ void Goto(arquivo *auxAberto, status **posStatus, int pos)
 
         *posStatus = auxStatus;
 
-        if(*posStatus == NULL)
-            printf("\nRegistro não encontrado!\n");
+        if(*posStatus != NULL)
+        {
+        	gotoxy(col,lin);
+			printf(". GOTO   %d",cont);
+        }
+        else
+        {
+        	gotoxy(col,lin);
+        	printf("Registro nao localizado!");
+        }
+            
     }
     else
     {
-        printf("\nPosição inválida!\n");
+    	gotoxy(col,lin);
+        printf("Posicao invalida!");
     }
 }
 
@@ -1004,80 +1062,83 @@ void deleteAll(arquivo *auxAberto)
 	printf("Todos os registro foram deletados (logicamente)");
 }
 
-//void pack(arquivo *auxAberto, status **posStatus) {
-//    int cont = 0;
-//    campo *atualCampo = auxAberto->campos; // Ponteiro para a cabeça da lista de campos
-//    celula *atualCelula, *auxCelula; // Ponteiros para manipular a lista de células
-//    status *atualStatus = auxAberto->status; // Ponteiro para a cabeça da lista de status
-//    status *auxStatus; // Ponteiro auxiliar para exclusão
-//
-//    while (atualStatus != NULL) {
-//        if (stricmp(atualStatus->status, "false") == 0) {
-//            if (cont == 0) { // Se for excluir o primeiro registro
-//                auxStatus = atualStatus;
-//                atualStatus = atualStatus->prox;
-//                auxAberto->status = atualStatus;
-//
-//                atualCampo = auxAberto->campos;
-//                while (atualCampo != NULL) {
-//                    atualCelula = atualCampo->pDados;
-//                    auxAberto->campos->pDados = atualCelula->prox;
-//                    auxCelula = atualCelula;
-//                    atualCelula = atualCelula->prox;
-//                    free(auxCelula);
-//                    atualCampo = atualCampo->prox;
-//                }
-//            } else { // Caso não seja o primeiro registro
-//                auxStatus = atualStatus;
-//                atualStatus = atualStatus->prox;
-//
-//                atualCampo = auxAberto->campos;
-//                while (atualCampo != NULL) {
-//                    auxCelula = atualCelula;
-//                    atualCelula = atualCelula->prox;
-//                    free(auxCelula);
-//                    atualCampo = atualCampo->prox;
-//                }
-//            }
-//            free(auxStatus);
-//        }
-//        
-//        atualCampo = auxAberto->campos;
-//        while (atualCampo != NULL) {
-//            auxCelula = atualCelula;
-//            atualCelula = atualCelula->prox;
-//            atualCampo = atualCampo->prox;
-//        }
-//        atualCampo = auxAberto->campos;
-//        atualStatus = atualStatus->prox;
-//        cont++;
-//    }
-//
-//    // Atualiza `posStatus` para apontar ao primeiro status "true"
-//    atualStatus = auxAberto->status;
-//    while (atualStatus != NULL && stricmp(atualStatus->status, "false") == 0) {
-//        atualStatus = atualStatus->prox;
-//        atualCampo = auxAberto->campos;
-//        while (atualCampo != NULL) {
-//            atualCampo->pAtual = atualCampo->pAtual->prox;
-//            atualCampo = atualCampo->prox;
-//        }
-//    }
-//
-//    if (atualStatus == NULL) {
-//        *posStatus = NULL;
-//        atualCampo->pAtual = NULL;
-//    } else {
-//        *posStatus = atualStatus; // Atualizando o ponteiro do status
-//    }
-//}
+void pack(arquivo *auxAberto, status **posStatus)
+{
+    status *atualStatus = auxAberto->status;
+    status *antStatus = NULL;
+    campo *atualCampo;
+    int pos = 0, col=1, lin=1;
+
+    while(atualStatus != NULL)
+	{
+        if(stricmp(atualStatus->status, "false") == 0)
+		{
+			//fazendo as ligações dos status
+            status *remover = atualStatus;
+            if(antStatus == NULL)
+			{
+                auxAberto->status = atualStatus->prox;
+                atualStatus = auxAberto->status;
+            }
+			else
+			{
+                antStatus->prox = atualStatus->prox;
+                atualStatus = antStatus->prox;
+            }
+            free(remover);
+
+			//fazendo a ligação de todos os campos
+            atualCampo = auxAberto->campos;
+            while(atualCampo != NULL)
+			{
+                celula *cel = atualCampo->pDados;
+                celula *antCel = NULL;
+                int i = 0;
+                while(cel != NULL && i < pos)
+				{
+                    antCel = cel;
+                    cel = cel->prox;
+                    i++;
+                }
+                if(cel != NULL)
+				{
+                    if(antCel == NULL)
+                        atualCampo->pDados = cel->prox;
+                    else
+                        antCel->prox = cel->prox;
+                    free(cel);
+                }
+                atualCampo = atualCampo->prox;
+            }
+        }
+		else
+		{
+            antStatus = atualStatus;
+            atualStatus = atualStatus->prox;
+            pos++;
+        }
+    }
+
+	gotoxy(col,lin);
+	printf("Pack realizado com sucesso");
+	//colocando os ponteiros no primeiro registro
+	atualCampo = auxAberto->campos;
+	if(atualCampo->pDados != NULL)
+	{
+		*posStatus = auxAberto->status;
+		while(atualCampo != NULL)
+		{
+		    atualCampo->pAtual = atualCampo->pDados;
+		    atualCampo = atualCampo->prox;
+		}
+	}
+}
 
 void recall(arquivo *aberto, status *posStatus)
 {
 	int col = 1, lin = 1;
 
     system("cls");
-
     if(stricmp(posStatus->status, "false") == 0)
     {
         strcpy(posStatus->status, "true");
@@ -1100,7 +1161,7 @@ void zap(arquivo *aberto)
 	while( aux != NULL )
 	{
 		printf("to aqui fora");
-		// andar os campos
+		//andar os campos
 		auxD = aux->pDados;
 		while(auxD!= NULL )
 		{
@@ -1113,7 +1174,7 @@ void zap(arquivo *aberto)
 		aux=aux->prox;
 	}
 	
-	// exclusão do status
+	//exclusão do status
 	status *auxS,*exc;
 	auxS=aberto->status;
 	
@@ -1124,8 +1185,6 @@ void zap(arquivo *aberto)
 		free(exc);
 	}
 	aberto->status = NULL; // definindo que não tem nada nos campos
-	
-	
 }
 
 int main(void)
@@ -1227,7 +1286,7 @@ int main(void)
 				if(aberto != NULL)
 				{
 					limparExibicao();
-					listStructure(aberto,auxListUnid);
+					listStructure(aberto,auxListUnid,poz_y);
 					poz_y = wherey();
 					imprimirComando(comando,poz_y);
 					desenharMenu(poz_y,comando,uni);
@@ -1534,12 +1593,11 @@ int main(void)
 					if(aberto->campos->pAtual != NULL)
 					{
 						limparExibicao();
-						// aqui a chamada de função
+						pack(aberto,&posStatus);
 						poz_y = wherey();
 						imprimirComando(comando,poz_y);
 						desenharMenu(poz_y,comando,uni);
 					}
-						//pack(aberto,&posStatus);
 					else
 						printf("\nVoce ainda nao inseriu um registro!\n");
 				}
